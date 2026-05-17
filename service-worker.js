@@ -1,4 +1,4 @@
-const CACHE_NAME = 'card-optimizer-vn-v3-hide-calc';
+const CACHE_NAME = 'card-optimizer-vn-v5-ocr-many-bills';
 const ASSETS = ['./','./index.html','./manifest.webmanifest','./service-worker.js'];
 self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))); self.skipWaiting(); });
 self.addEventListener('activate', event => { event.waitUntil(caches.keys().then(keys => Promise.all(keys.map(key => key !== CACHE_NAME ? caches.delete(key) : null)))); self.clients.claim(); });
