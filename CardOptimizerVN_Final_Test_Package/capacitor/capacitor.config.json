@@ -1,0 +1,8 @@
+{
+  "appId": "com.hanhphuc.cardoptimizer",
+  "appName": "Card Optimizer VN",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

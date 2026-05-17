@@ -1,0 +1,3401 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Card Optimizer VN</title>
+  <meta name="theme-color" content="#2457ff" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Card Optimizer" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+
+  <style>
+    :root{
+      --bg:#f5f7fb; --card:#ffffff; --text:#172033; --muted:#657089; --line:#e6eaf2;
+      --accent:#2457ff; --accent2:#0ea5e9; --good:#12805c; --warn:#b7791f; --bad:#b91c1c;
+      --soft:#eef3ff; --shadow:0 12px 30px rgba(20,35,80,.08); --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#eef3ff 0,#f7f8fb 240px);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    header{padding:26px 18px 16px;max-width:1180px;margin:auto}
+    .title{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    h1{font-size:30px;margin:0;letter-spacing:-.02em}
+    .sub{color:var(--muted);margin-top:6px;line-height:1.45}
+    .pill{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 12px;box-shadow:var(--shadow);font-size:13px;color:var(--muted)}
+    main{max-width:1180px;margin:0 auto;padding:12px 18px 38px;display:grid;grid-template-columns:420px 1fr;gap:18px}
+    @media(max-width:920px){main{grid-template-columns:1fr}.sticky{position:static!important}}
+    .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .panel h2{font-size:18px;margin:0 0 14px}
+    .panel .body{padding:18px}
+    .sticky{position:sticky;top:14px}
+    label{font-size:13px;font-weight:650;color:#2d3748;margin:12px 0 6px;display:block}
+    input,select{width:100%;border:1px solid #d9dfec;background:#fff;border-radius:12px;padding:12px 12px;font-size:15px;color:var(--text);outline:none}
+    input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(36,87,255,.11)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .btns{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+    button{border:0;border-radius:13px;padding:12px 14px;font-weight:750;cursor:pointer;font-size:14px}
+    .primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;box-shadow:0 10px 22px rgba(36,87,255,.25)}
+    .secondary{background:#eef2f7;color:#2b3548}
+    .tiny{padding:7px 10px;font-size:12px;border-radius:999px;background:#eef2f7;color:#334155}
+    .resultTop{display:grid;gap:12px}
+    .winner{border:1px solid #b9f0d3;background:linear-gradient(180deg,#f0fff7,#fff);border-radius:18px;padding:14px}
+    .winner h3{margin:0 0 4px;font-size:19px;line-height:1.25}
+    .cards{display:grid;gap:10px;margin-top:12px}
+    .cardRow{display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:#fff;align-items:start}
+    .cardRow.top{border-color:#a7e8c3;background:#fbfffd}
+    .cardRow.needThreshold{border-color:#f6d98f;background:#fffaf0}
+    .cardRow.needAction{border-color:#bfdbfe;background:#f8fbff}
+    .cardRow.notPreferred{opacity:.92}
+    .benefit.potential{color:#b7791f}
+    .benefit.zero{color:#64748b}
+    .rank.warnRank{color:#b7791f;font-weight:900}
+    .tag.needSpend{background:#fff7ed;color:#b45309;border:1px solid #fed7aa}
+    .tag.action{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+    .cardRow>div:last-child{display:flex;flex-direction:column;align-items:flex-end}
+    .cardName{font-weight:850;line-height:1.35}
+    .cardTitleRow{display:flex;align-items:center;gap:10px}
+    .winnerTitleRow{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:6px}
+    .cardNameWrap{min-width:0}
+    .bankLogo{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:32px;height:32px;border-radius:10px;font-size:11px;font-weight:900;letter-spacing:.02em;box-shadow:0 6px 14px rgba(20,35,80,.12)}
+    .bankLogo.sm{width:24px;height:24px;border-radius:8px;font-size:9px}
+    .bankLogo.lg{width:40px;height:40px;border-radius:12px;font-size:13px}
+    .cardTitleRow .cardName, .winnerTitleRow h3{margin:0}
+    .cardMeta{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.45}
+    .benefit{text-align:right;font-weight:850;color:var(--good);white-space:nowrap;font-size:28px;line-height:1}
+    .cardRow .tiny{min-width:124px;justify-content:center}
+    .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+    .tag{font-size:12px}
+    .thresholdAlert{display:block;margin-top:8px;padding:10px 12px;border-radius:12px;background:#fffaf3;border:1px solid #f2e4c7;line-height:1.45;font-weight:700}
+    .thresholdAlert.compact{display:grid;gap:2px}
+    .thresholdAlert.compact{background:transparent!important;border:0!important;padding:0!important}.thresholdAlert.compact .metricGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.thresholdAlert.compact .metricRow{display:block;padding:9px 10px;border:1px solid #e5eaf3;border-radius:12px;background:#fff}
+    .thresholdAlert.compact .metricRow:last-child{border-bottom:1px solid #e5eaf3}
+    .thresholdAlert.compact .metricLabel{display:block;font-size:11px;color:#64748b;font-weight:850;margin-bottom:3px;line-height:1.25}
+    .thresholdAlert.compact .metricValue{display:block;font-size:15px;color:#0f766e;font-weight:950;line-height:1.25}
+    .thresholdAlert.compact .metricHeadline{padding:9px 10px;border:1px solid #fed7aa;border-radius:12px;background:#fff7ed;color:#b45309;font-weight:950;margin-bottom:8px}
+    .thresholdAlert.compact .metricHeadline + .metricGrid{margin-top:0}.thresholdAlert.compact .metricRow.importantMetric{border-color:#bbf7d0;background:#f0fdf4}.thresholdAlert.compact .metricRow.warningMetric{border-color:#fed7aa;background:#fff7ed}@media(max-width:720px){.thresholdAlert.compact .metricGrid{grid-template-columns:1fr}}
+    .notePanels{display:grid;gap:10px;margin-top:8px}
+    .notePanel{border:1px solid #e5eaf3;border-radius:14px;background:#fafcff;padding:10px 12px}
+    .notePanel.historyPanel{background:#fffaf3;border-color:#f2e4c7}
+    .notePanel.rewardPanel{background:#f5fffb;border-color:#cceedd}
+    .notePanelTitle{font-size:12px;font-weight:900;color:#64748b;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+    .notePanel .cardMeta{margin-top:0}
+    .notePanel .thresholdAlert{margin-top:0}
+    .notePanel .thresholdAlert + .thresholdAlert{margin-top:8px}
+    @media(max-width:720px){
+      .cardRow{grid-template-columns:1fr}
+      .cardRow>div:last-child{align-items:flex-start}
+      .benefit{text-align:left}
+      .cardRow .tiny{min-width:unset}
+    }
+    .winner h3{margin:0 0 6px;font-size:20px}
+    .money{font-size:28px;font-weight:850;color:var(--good);letter-spacing:-.02em}
+    .note{color:var(--muted);font-size:13px;line-height:1.5}
+    .cards{display:grid;gap:10px;margin-top:12px}
+    .cardRow{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;padding:14px;border:1px solid var(--line);border-radius:16px;background:#fff}
+    .cardRow.top{border-color:#a7e8c3;background:#fbfffd}
+    .cardRow.needThreshold{border-color:#f6d98f;background:#fffaf0}
+    .cardRow.needAction{border-color:#bfdbfe;background:#f8fbff}
+    .cardRow.notPreferred{opacity:.92}
+    .benefit.potential{color:#b7791f}
+    .benefit.zero{color:#64748b}
+    .rank.warnRank{color:#b7791f;font-weight:900}
+    .tag.needSpend{background:#fff7ed;color:#b45309;border:1px solid #fed7aa}
+    .tag.action{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+    .cardName{font-weight:800}
+    .cardMeta{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.4}
+    .benefit{text-align:right;font-weight:850;color:var(--good);white-space:nowrap}
+    .rank{font-size:12px;color:#7a8499}
+    .bad{color:var(--bad)} .warn{color:var(--warn)}
+    .tabs{display:flex;gap:8px;padding:8px;border-bottom:1px solid var(--line);overflow:auto}
+    .tab{background:transparent;color:var(--muted);padding:10px 12px;white-space:nowrap}
+    .tab.active{background:var(--soft);color:var(--accent)}
+    .hidden{display:none!important}
+    .settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    @media(max-width:720px){.settings{grid-template-columns:1fr}.row,.row3{grid-template-columns:1fr}}
+    .settingBox{border:1px solid var(--line);border-radius:16px;padding:12px;background:#fbfcff}
+    .settingBox h4{margin:0 0 8px;font-size:14px}
+    .mini{font-size:12px;color:var(--muted);line-height:1.4}
+    .list{display:grid;gap:8px}
+    .dataCard{border:1px solid var(--line);border-radius:15px;padding:12px;background:#fff}
+    .dataCard h4{margin:0 0 5px;font-size:15px}
+    .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+    .tag{font-size:11px;background:#eef2f7;color:#41506a;padding:5px 8px;border-radius:999px}
+    .footerNote{font-size:12px;color:var(--muted);line-height:1.5;padding:14px 18px;border-top:1px solid var(--line)}
+    .source{font-size:12px;color:#56627a;line-height:1.5}
+    .switches{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+    .check{display:flex;gap:8px;align-items:center;font-size:13px;color:#334155;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px}
+    .check input{width:auto}
+    .empty{padding:24px;text-align:center;color:var(--muted)}
+    .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#eef2f7;border:1px solid #dbe2ee;border-radius:6px;padding:1px 5px}
+    .thumb{max-width:72px;max-height:72px;border-radius:12px;border:1px solid var(--line);object-fit:cover}
+    .expenseRow{display:grid;grid-template-columns:92px 1fr auto;gap:12px;align-items:start;border:1px solid var(--line);border-radius:16px;padding:12px;background:#fff;margin-bottom:8px}
+    .reminderRow{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff;margin-bottom:10px}
+    .reminderRow.dueSoon{border-color:#f6d98f;background:#fffaf0}
+    .reminderRow.overdue{border-color:#fecaca;background:#fff5f5}
+    .dateBig{font-weight:850;font-size:17px}
+    .thresholdAlert{display:block;margin-top:8px;padding:8px 10px;border-radius:10px;background:#fff7ed;line-height:1.55;font-weight:700}.thresholdAlert div{margin:2px 0}
+    .loanRow{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff;margin-bottom:10px}
+    .loanRow.unpaid{border-color:#fecaca;background:#fff7f7}
+    .historyBox{border:1px dashed #b6c2d6;background:#fbfdff;border-radius:16px;padding:12px;margin-bottom:12px}
+    .rewardRow{border:1px solid var(--line);border-radius:16px;background:#fff;padding:14px;margin-bottom:10px}
+    .rewardHeader{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
+    .rewardGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+    .rewardCell{background:#f8fafc;border:1px solid #edf2f7;border-radius:12px;padding:9px}
+    .rewardCell b{display:block;font-size:12px;color:#64748b;margin-bottom:3px}
+    .rewardCell span{font-weight:850}
+    .rewardGroup{margin-top:10px;padding:10px;border-radius:12px;background:#fbfcff;border:1px dashed #d8e0ee;font-size:13px;line-height:1.5}
+    .rewardSectionTitle{margin-top:12px;font-weight:850;color:#334155}
+    .rewardPill{display:inline-block;padding:3px 8px;border-radius:999px;border:1px solid #dbe2ee;background:#f8fafc;font-size:12px;font-weight:800;margin-left:6px}
+    @media(max-width:720px){.rewardGrid{grid-template-columns:1fr 1fr}.rewardHeader{grid-template-columns:1fr}}
+    .loanRow.paid{border-color:#bbf7d0;background:#f7fff9}
+    @media(max-width:720px){.expenseRow{grid-template-columns:1fr}.benefit{text-align:left}}
+
+    .resultGroups{display:grid;gap:12px;margin-top:12px}
+    .resultGroup{border:1px solid var(--line);border-radius:18px;background:#fff;overflow:hidden}
+    .resultGroup>summary{list-style:none;cursor:pointer;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fbfcff;border-bottom:1px solid var(--line)}
+    .resultGroup>summary::-webkit-details-marker{display:none}
+    .resultGroupTitle{font-weight:950;line-height:1.25}
+    .resultGroupSub{font-size:12px;color:var(--muted);font-weight:650;margin-top:3px}
+    .resultGroupCount{font-size:12px;font-weight:900;color:#334155;background:#eef2f7;border-radius:999px;padding:5px 9px;white-space:nowrap}
+    .resultGroup .cards{padding:10px;margin-top:0}
+    .resultGroup.goodGroup{border-color:#b9f0d3}.resultGroup.goodGroup>summary{background:#f0fff7}
+    .resultGroup.potentialGroup{border-color:#f6d98f}.resultGroup.potentialGroup>summary{background:#fffaf0}
+    .resultGroup.actionGroup{border-color:#bfdbfe}.resultGroup.actionGroup>summary{background:#f8fbff}
+    .resultGroup.lowGroup>summary{background:#f8fafc}
+    .backupActions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .backupStatus{margin-top:10px;color:var(--muted);font-size:12px;line-height:1.5}
+
+    .overviewGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .overviewMetric{border:1px solid var(--line);border-radius:16px;background:#fff;padding:12px}
+    .overviewMetric b{display:block;font-size:12px;color:#64748b;margin-bottom:5px}
+    .overviewMetric span{display:block;font-size:22px;font-weight:950;color:#172033;letter-spacing:-.02em}
+    .overviewMetric.good span{color:var(--good)}
+    .overviewMetric.warn span{color:var(--warn)}
+    .overviewMetric.bad span{color:var(--bad)}
+    .overviewMetric small{display:block;margin-top:5px;color:var(--muted);font-size:12px;line-height:1.35}
+    .overviewSections{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+    .overviewBox{border:1px solid var(--line);border-radius:18px;background:#fff;padding:14px}
+    .overviewBox h3{font-size:15px;margin:0 0 10px;color:#334155}
+    .overviewList{display:grid;gap:8px}
+    .overviewItem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start;border:1px solid #edf2f7;border-radius:14px;background:#fbfcff;padding:10px}
+    .overviewItem strong{display:block;line-height:1.35}
+    .overviewItem .amount{font-weight:950;white-space:nowrap;color:#172033;text-align:right}
+    .overviewItem .subline{font-size:12px;color:var(--muted);line-height:1.35;margin-top:3px}
+    .overviewItem.important{border-color:#fecaca;background:#fff7f7}
+    .overviewItem.important .amount{color:var(--bad)}
+    .overviewItem.moneyIn{border-color:#bbf7d0;background:#f7fff9}
+    .overviewItem.moneyIn .amount{color:var(--good)}
+
+    @media(max-width:720px){
+      body{padding-bottom:calc(84px + env(safe-area-inset-bottom));background:linear-gradient(180deg,#eef3ff 0,#f7f8fb 170px)}
+      header{padding:16px 14px 8px}
+      h1{font-size:24px}
+      .sub{font-size:13px}.pill{font-size:12px;padding:7px 10px}
+      main{padding:8px 12px 24px;gap:12px}
+      .panel{border-radius:16px}.panel .body{padding:14px}.sticky{position:static!important}
+      button{min-height:42px}.btns button{flex:1 1 140px}
+      input,select{font-size:16px;padding:12px}
+      .winner{padding:13px;border-radius:16px}.money{font-size:25px}
+      .tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);border-bottom:0;box-shadow:0 -12px 28px rgba(20,35,80,.12);padding:8px 8px calc(8px + env(safe-area-inset-bottom));gap:6px;overflow-x:auto;scroll-snap-type:x proximity}
+      .tab{flex:0 0 72px;scroll-snap-align:center;display:grid;place-items:center;gap:2px;border-radius:16px;padding:7px 6px;font-size:0;min-height:54px;color:#64748b}
+      .tab::before{font-size:18px;line-height:1;display:block}
+      .tab::after{content:attr(data-short);font-size:11px;line-height:1.15;font-weight:850;display:block}
+      .tab[data-tab="result"]::before{content:"💳"}.tab[data-tab="overview"]::before{content:"📊"}.tab[data-tab="expenses"]::before{content:"🧾"}.tab[data-tab="rewards"]::before{content:"🎁"}.tab[data-tab="loans"]::before{content:"🤝"}.tab[data-tab="reminders"]::before{content:"🔔"}.tab[data-tab="settings"]::before{content:"⚙️"}.tab[data-tab="cards"]::before{content:"📋"}.tab[data-tab="about"]::before{content:"ℹ️"}
+      .cardRow{padding:12px;border-radius:15px}.benefit{font-size:24px}.cardName{font-size:14px}
+      .resultGroup>summary{padding:12px}.resultGroup .cards{padding:8px}.resultGroupTitle{font-size:14px}
+      .rewardGrid,.overviewGrid{grid-template-columns:1fr 1fr}.overviewSections{grid-template-columns:1fr}.overviewMetric span{font-size:20px}.expenseRow,.loanRow,.reminderRow{grid-template-columns:1fr}.switches{grid-template-columns:1fr}
+    }
+
+  </style>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="title">
+      <div>
+        <h1>Card Optimizer VN</h1>
+        <div class="sub">Nhập hóa đơn → app so sánh thẻ và gợi ý thẻ lợi nhất theo cashback, điểm, trần, điều kiện chi tiêu.</div>
+      </div>
+      <div class="pill">Prototype offline · 28 thẻ · lưu bằng localStorage</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel sticky">
+      <div class="body">
+        <h2>Hỏi thanh toán dùng thẻ nào?</h2>
+        <label>Số tiền giao dịch</label>
+        <input id="amount" inputmode="numeric" value="1.000.000" placeholder="Ví dụ 1.000.000" />
+        <div class="row">
+          <div>
+            <label>Merchant / nơi thanh toán</label>
+            <input id="merchant" placeholder="Shopee, Grab, Highlands, Vietjet..." />
+          </div>
+          <div>
+            <label>MCC nếu biết</label>
+            <input id="mcc" inputmode="numeric" placeholder="5812, 5411..." />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Nhóm chi tiêu</label>
+            <select id="category">
+              <option value="online">Online chung</option>
+              <option value="ecommerce">TMĐT / sàn online</option>
+              <option value="shopee">Shopee</option>
+              <option value="shopeefood">ShopeeFood</option>
+              <option value="lazada">Lazada</option>
+              <option value="tiktok">TikTok Shop</option>
+              <option value="dining">Ăn uống / nhà hàng / café</option>
+              <option value="supermarket">Siêu thị / cửa hàng tiện lợi</option>
+              <option value="fashion">Thời trang</option>
+              <option value="travel">Du lịch / khách sạn / tour</option>
+              <option value="airline">Vé máy bay</option>
+              <option value="vietjet">Vietjet</option>
+              <option value="transport">Di chuyển / Grab / taxi</option>
+              <option value="entertainment">Giải trí / phim / streaming</option>
+              <option value="education">Giáo dục</option>
+              <option value="insurance">Bảo hiểm</option>
+              <option value="health">Sức khỏe / y tế</option>
+              <option value="museum">Bảo tàng / di tích</option>
+              <option value="utilities">Điện / nước / hóa đơn tiện ích</option>
+              <option value="telecom">Viễn thông / Internet</option>
+              <option value="fuel">Xăng dầu</option>
+
+              <option value="convenience">Cửa hàng tiện lợi</option>
+              <option value="hotel">Khách sạn / lưu trú</option>
+              <option value="professional_ewallet">Dịch vụ chuyên nghiệp / ví điện tử</option>
+              <option value="cinema">Rạp chiếu phim</option>
+              <option value="other">Khác</option>
+            </select>
+          </div>
+          <div>
+            <label>Kênh thanh toán</label>
+            <select id="channel">
+              <option value="online">Online / app / web</option>
+              <option value="pos">POS quẹt/chạm</option>
+              <option value="contactless">Contactless</option>
+              <option value="wallet">Apple Pay / Samsung Pay / Google Pay / Garmin Pay</option>
+              <option value="qr">QR</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>DSCT cộng thêm thủ công nếu thiếu lịch sử</label>
+            <input id="monthSpend" inputmode="numeric" value="0" />
+          </div>
+          <div>
+            <label>Ngày giao dịch</label>
+            <input id="date" type="date" />
+          </div>
+        </div>
+        <label>Cách xét điều kiện doanh số chi tiêu</label>
+        <select id="spendMode">
+          <option value="after">Chắc chắn: đã chi trong kỳ + hóa đơn này</option>
+          <option value="current">Chỉ tính lịch sử đã có, chưa cộng hóa đơn này</option>
+          <option value="optimistic">Dự kiến cuối kỳ sẽ đạt mốc - chỉ để tham khảo</option>
+        </select>
+        <div class="note" style="margin-top:6px">Mặc định app tự lấy lịch sử chi tiêu từng thẻ, gồm cả khoản cho mượn thẻ đã lưu. Ô này chỉ dùng để cộng thêm thủ công nếu má chưa nhập đủ lịch sử.</div>
+
+        <div class="row">
+          <div>
+            <label>Giao dịch ngoại tệ?</label>
+            <select id="foreign">
+              <option value="no">Không</option>
+              <option value="yes">Có</option>
+            </select>
+          </div>
+          <div>
+            <label>Tháng sinh nhật?</label>
+            <select id="birthday">
+              <option value="auto">Tự động theo ngày sinh</option>
+              <option value="no">Không</option>
+              <option value="yes">Có - ép tính sinh nhật</option>
+            </select>
+          </div>
+        </div>
+        <div class="btns">
+          <button class="primary" id="calcBtn">Tính thẻ tốt nhất</button>
+          <button class="secondary" id="demoBtn">Demo Shopee 2 triệu</button>
+        </div>
+      </div>
+      <div class="footerNote">
+        Lưu ý: Đây là bản thử nghiệm. MCC thực tế theo sao kê/ngân hàng có thể khác. Nếu chưa có lịch sử chi tiêu, để DSCT = 0; app sẽ ưu tiên thẻ không yêu cầu mốc chi tiêu hoặc chỉ tính thẻ đạt mốc sau hóa đơn này.
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="tabs">
+        <button class="tab active" data-tab="result" data-short="Tính">Kết quả</button>
+        <button class="tab" data-tab="overview" data-short="Tổng">Tổng quan</button>
+        <button class="tab" data-tab="expenses" data-short="Chi">Chi tiêu</button>
+        <button class="tab" data-tab="rewards" data-short="Hoàn">Lịch sử hoàn tiền</button>
+        <button class="tab" data-tab="loans" data-short="Mượn">Cho mượn thẻ</button>
+        <button class="tab" data-tab="reminders" data-short="Nhắc">Nhắc thanh toán</button>
+        <button class="tab" data-tab="settings" data-short="Cài">Cài đặt thẻ</button>
+        <button class="tab" data-tab="cards" data-short="Rule">Danh sách rule</button>
+        <button class="tab" data-tab="about" data-short="Ghi">Ghi chú</button>
+      </div>
+
+      <div id="tab-result" class="body">
+        <div id="results" class="empty">Nhập thông tin hóa đơn rồi bấm <span class="kbd">Tính thẻ tốt nhất</span>.</div>
+      </div>
+
+      <div id="tab-overview" class="body hidden">
+        <h2>Quản lý chi tiêu cá nhân</h2>
+        <div class="note">
+          Mục này gom nhanh dữ liệu đã lưu: tháng này đã xài bao nhiêu, cho mượn bao nhiêu, còn phải thu bao nhiêu, và hiện tại mỗi thẻ còn phải trả bao nhiêu. Số “phải trả thẻ” lấy từ phần <b>Đã dùng / dư nợ hiện tại</b> trong Cài đặt thẻ.
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div>
+            <label>Tháng cần xem</label>
+            <input id="overviewMonth" type="month" />
+          </div>
+          <div>
+            <label>Cách hiểu</label>
+            <div class="mini" style="padding-top:12px">Chi tiêu tháng lấy từ lịch sử đã lưu. Dư nợ phải trả lấy từ cài đặt từng thẻ để đúng với sao kê thực tế.</div>
+          </div>
+        </div>
+        <div class="btns">
+          <button class="primary" id="refreshOverview">Cập nhật tổng quan</button>
+        </div>
+
+        <div id="overviewSummary" class="overviewGrid" style="margin-top:12px"></div>
+
+        <div class="overviewSections">
+          <div class="overviewBox">
+            <h3>Phải trả thẻ hiện tại</h3>
+            <div id="overviewCardDebt" class="overviewList"></div>
+          </div>
+          <div class="overviewBox">
+            <h3>Tháng này xài theo từng thẻ</h3>
+            <div id="overviewCardSpend" class="overviewList"></div>
+          </div>
+          <div class="overviewBox">
+            <h3>Cho mượn thẻ / còn phải thu</h3>
+            <div id="overviewLoanList" class="overviewList"></div>
+          </div>
+          <div class="overviewBox">
+            <h3>Chi tiêu theo nhóm</h3>
+            <div id="overviewCategoryList" class="overviewList"></div>
+          </div>
+        </div>
+      </div>
+
+
+      <div id="tab-rewards" class="body hidden">
+        <h2>Lịch sử hoàn tiền</h2>
+        <div class="note">
+          Mục này tổng hợp theo lịch sử đã lưu: mỗi thẻ đã chi bao nhiêu, ước tính đã hoàn bao nhiêu, còn trần hoàn bao nhiêu. Khoản cho mượn thẻ cũng được tính vào chi tiêu của đúng thẻ. CIMB REVI và OCB iGen cũng sẽ hiện ở nhóm còn có thể hoàn Shopee/TMĐT dù tháng này chưa phát sinh chi tiêu trên thẻ đó. ACB Visa Platinum: nhóm Apple Pay/Samsung Pay/Google Pay/Garmin Pay là thanh toán bằng thẻ qua mobile wallet, khác với ví điện tử nạp tiền/chuyển tiền.
+        </div>
+        <div class="row">
+          <div>
+            <label>Tháng cần xem</label>
+            <input id="rewardMonth" type="month" />
+          </div>
+          <div>
+            <label>Cách hiểu</label>
+            <div class="mini" style="padding-top:12px">Số hoàn là ước tính theo rule trong app. Nếu ngân hàng hoàn thực tế khác, sau này có thể thêm cột “hoàn thực nhận”.</div>
+          </div>
+        </div>
+        <div class="btns">
+          <button class="primary" id="refreshRewards">Cập nhật lịch sử hoàn tiền</button>
+        </div>
+        <div id="rewardStats" class="note" style="margin-top:12px"></div>
+        <div id="rewardList" style="margin-top:12px"></div>
+      </div>
+
+      <div id="tab-expenses" class="body hidden">
+        <h2>Nhập chi tiêu / lưu hóa đơn</h2>
+        <div class="row">
+          <div>
+            <label>Ngày chi tiêu</label>
+            <input id="expenseDate" type="date" />
+          </div>
+          <div>
+            <label>Số tiền</label>
+            <input id="expenseAmount" inputmode="numeric" placeholder="Ví dụ 250.000" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Merchant / nơi thanh toán</label>
+            <input id="expenseMerchant" placeholder="Highlands, Shopee, Grab..." />
+          </div>
+          <div>
+            <label>Thẻ đã dùng</label>
+            <select id="expenseCard"></select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Nhóm chi tiêu</label>
+            <select id="expenseCategory">
+              <option value="online">Online chung</option>
+              <option value="ecommerce">TMĐT / sàn online</option>
+              <option value="shopee">Shopee</option>
+              <option value="shopeefood">ShopeeFood</option>
+              <option value="lazada">Lazada</option>
+              <option value="tiktok">TikTok Shop</option>
+              <option value="dining">Ăn uống / nhà hàng / café</option>
+              <option value="supermarket">Siêu thị / cửa hàng tiện lợi</option>
+              <option value="fashion">Thời trang</option>
+              <option value="travel">Du lịch / khách sạn / tour</option>
+              <option value="airline">Vé máy bay</option>
+              <option value="vietjet">Vietjet</option>
+              <option value="transport">Di chuyển / Grab / taxi</option>
+              <option value="entertainment">Giải trí / phim / streaming</option>
+              <option value="education">Giáo dục</option>
+              <option value="insurance">Bảo hiểm</option>
+              <option value="health">Sức khỏe / y tế</option>
+              <option value="museum">Bảo tàng / di tích</option>
+              <option value="utilities">Điện / nước / hóa đơn tiện ích</option>
+              <option value="telecom">Viễn thông / Internet</option>
+              <option value="fuel">Xăng dầu</option>
+
+              <option value="convenience">Cửa hàng tiện lợi</option>
+              <option value="hotel">Khách sạn / lưu trú</option>
+              <option value="professional_ewallet">Dịch vụ chuyên nghiệp / ví điện tử</option>
+              <option value="cinema">Rạp chiếu phim</option>
+              <option value="other">Khác</option>
+            </select>
+          </div>
+          <div>
+            <label>MCC nếu biết</label>
+            <input id="expenseMcc" inputmode="numeric" placeholder="5812, 5411..." />
+          </div>
+        </div>
+        <label>Ảnh chụp hóa đơn / sao kê</label>
+        <input id="expenseImage" type="file" accept="image/*" />
+        <div class="btns">
+          <button class="secondary" id="ocrExpense">OCR đọc ảnh</button>
+          <button class="primary" id="saveExpense">Lưu chi tiêu</button>
+          <button class="secondary" id="useExpenseForCalc">Đưa qua màn hình tính thẻ</button>
+          <button class="secondary" id="clearExpenses">Xóa lịch sử</button>
+        </div>
+        <div id="ocrStatus" class="note" style="margin-top:6px">
+          OCR dùng Tesseract.js, cần internet lần đầu để tải thư viện/ngôn ngữ. Sau khi đọc xong, má kiểm tra lại số tiền/merchant rồi hãy lưu.
+        </div>
+        <label>Kết quả OCR thô</label>
+        <textarea id="ocrText" rows="7" style="width:100%;border:1px solid #d9dfec;border-radius:12px;padding:12px;font-size:13px;line-height:1.4" placeholder="Kết quả OCR sẽ hiện ở đây để đối chiếu..."></textarea>
+        <h2 style="margin-top:22px">Lịch sử chi tiêu</h2>
+        <div id="expenseStats" class="note"></div>
+        <div id="expenseList" style="margin-top:10px"></div>
+      </div>
+
+
+
+      <div id="tab-loans" class="body hidden">
+        <h2>Quản lý cho bạn mượn thẻ</h2>
+        <div class="note">
+          Dùng khi má quẹt thẻ giúp bạn/người thân. Khoản này vẫn tính vào chi tiêu của thẻ đã dùng để đạt mốc hoàn tiền. Ngày mượn tự lấy hôm nay, ngày trả cũng tự lấy khi ghi nhận trả tiền.
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Người mượn / người nhờ thanh toán</label>
+            <input id="loanBorrower" placeholder="Ví dụ: Anh A, bạn B..." />
+          </div>
+          <div>
+            <label>Số tiền</label>
+            <input id="loanAmount" inputmode="numeric" placeholder="Ví dụ 2.000.000" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Thẻ đã dùng</label>
+            <select id="loanCard"></select>
+          </div>
+          <div>
+            <label>Merchant / nội dung thanh toán</label>
+            <input id="loanMerchant" placeholder="Shopee, vé máy bay, nhà hàng..." />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Ngày mượn / ngày thanh toán</label>
+            <input id="loanDate" type="date" />
+          </div>
+          <div>
+            <label>Tiền đã trả trước / đã chuyển lại</label>
+            <input id="loanPaidAmount" inputmode="numeric" placeholder="Ví dụ 500.000, nếu chưa trả thì để trống" />
+          </div>
+        </div>
+        <input id="loanDueDate" type="hidden" />
+        <input id="loanPaidDate" type="hidden" />
+        <div class="note" style="margin-top:6px">
+          Không cần nhập hạn trả. Ngày mượn tự điền hôm nay; khi ghi nhận trả tiền, app tự lấy ngày hiện tại.
+        </div>
+
+        <label>Ghi chú</label>
+        <input id="loanNote" placeholder="Ví dụ: chuyển khoản lại trước ngày sao kê..." />
+
+        <label>Ảnh chụp hóa đơn / sao kê khoản mượn</label>
+        <input id="loanImage" type="file" accept="image/*" />
+        <div class="btns">
+          <button class="secondary" id="ocrLoan">OCR đọc ảnh</button>
+          <button class="primary" id="saveLoan">Lưu khoản mượn thẻ</button>
+          <button class="secondary" id="clearLoans">Xóa toàn bộ</button>
+        </div>
+        <div id="loanOcrStatus" class="note" style="margin-top:6px">
+          OCR sẽ gợi ý số tiền/merchant cho khoản cho mượn thẻ. Má kiểm tra lại trước khi lưu.
+        </div>
+        <label>Kết quả OCR khoản mượn</label>
+        <textarea id="loanOcrText" rows="6" style="width:100%;border:1px solid #d9dfec;border-radius:12px;padding:12px;font-size:13px;line-height:1.4" placeholder="Kết quả OCR sẽ hiện ở đây..."></textarea>
+
+        <h2 style="margin-top:22px">Người mượn trả tổng</h2>
+        <div class="row">
+          <div>
+            <label>Người trả</label>
+            <input id="bulkPayBorrower" placeholder="Nhập đúng tên người mượn" list="borrowerList" />
+            <datalist id="borrowerList"></datalist>
+          </div>
+          <div>
+            <label>Số tiền trả tổng</label>
+            <input id="bulkPayAmount" inputmode="numeric" placeholder="Ví dụ 3.000.000" />
+          </div>
+        </div>
+        <input id="bulkPayDate" type="hidden" />
+        <div class="btns">
+          <button class="primary" id="applyBulkPayment">Ghi nhận trả tổng</button>
+          <button class="secondary" id="showBorrowerHistory">Xem lịch sử người này</button>
+        </div>
+        <div class="note">
+          Khi người mượn chuyển một cục tiền, app sẽ tự phân bổ vào các khoản chưa thu của người đó theo thứ tự cũ đến mới và tự ghi ngày trả là hôm nay.
+        </div>
+
+        <h2 style="margin-top:22px">Lịch sử đã mượn theo người</h2>
+        <div id="borrowerHistory" style="margin-top:10px"></div>
+
+        <h2 style="margin-top:22px">Danh sách đang theo dõi</h2>
+        <div id="loanStats" class="note"></div>
+        <div id="loanList" style="margin-top:10px"></div>
+      </div>
+
+      <div id="tab-reminders" class="body hidden">
+        <h2>Nhắc thanh toán thẻ</h2>
+        <div class="note">
+          Bản web này sẽ tính ngày sao kê/ngày đến hạn từ dữ liệu má nhập. Muốn nhắc thật trên điện thoại/lịch, dùng nút xuất file lịch .ics rồi import vào Google Calendar/Apple Calendar.
+        </div>
+        <div class="btns">
+          <button class="primary" id="refreshReminders">Cập nhật danh sách nhắc</button>
+          <button class="secondary" id="downloadIcs">Xuất lịch nhắc .ics</button>
+          <button class="secondary" id="browserNotify">Bật thông báo trình duyệt</button>
+        </div>
+        <div id="reminderList" style="margin-top:14px"></div>
+      </div>
+
+      <div id="tab-settings" class="body hidden">
+        <h2>Cài đặt điều kiện cá nhân</h2>
+        <div class="note" style="margin-bottom:12px">Từ bản v0.17 app tự gợi ý cả những thẻ cần chọn danh mục chi tiêu. Không cần chọn trước; app sẽ hiện lợi ích tiềm năng và nhắc “Nhớ chọn danh mục ...” khi cần.</div>
+        <div class="settings">
+          <div class="settingBox" style="grid-column:1/-1">
+            <h4>Thông tin cá nhân</h4>
+            <div class="row">
+              <div>
+                <label>Ngày sinh</label>
+                <input id="personalBirthday" type="date" />
+              </div>
+              <div>
+                <label>Cách dùng</label>
+                <div class="mini" style="padding-top:12px">
+                  App dùng tháng sinh để tự kích hoạt ưu đãi sinh nhật, ví dụ MB Priority Visa Signature x2 tỷ lệ hoàn tiền trong kỳ sao kê có ngày sinh nhật.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="settingBox">
+            <h4>Cake Visa - 2 danh mục linh hoạt</h4>
+            <select id="cakeFlex1">
+              <option value="supermarket">Siêu thị</option>
+              <option value="dining">Ăn uống</option>
+              <option value="transport">Di chuyển</option>
+              <option value="convenience">Cửa hàng tiện lợi</option>
+              <option value="insurance">Bảo hiểm</option>
+              <option value="hotel">Khách sạn / lưu trú</option>
+              <option value="professional_ewallet">Dịch vụ chuyên nghiệp / ví điện tử</option>
+              <option value="airline">Hàng không</option>
+              <option value="cinema">Rạp chiếu phim</option></select>
+            <div style="height:8px"></div>
+            <select id="cakeFlex2">
+              <option value="supermarket">Siêu thị</option>
+              <option value="dining">Ăn uống</option>
+              <option value="transport">Di chuyển</option>
+              <option value="convenience">Cửa hàng tiện lợi</option>
+              <option value="insurance">Bảo hiểm</option>
+              <option value="hotel">Khách sạn / lưu trú</option>
+              <option value="professional_ewallet">Dịch vụ chuyên nghiệp / ví điện tử</option>
+              <option value="airline">Hàng không</option>
+              <option value="cinema">Rạp chiếu phim</option></select>
+            <div class="mini">3 nhóm cố định: TMĐT, du lịch/tour, thời trang.</div>
+          </div>
+
+          <div class="settingBox">
+            <h4>MSB mDigi - chọn 1 nhóm</h4>
+            <select id="msbMdigiCat"><option value="dining">Ăn uống</option><option value="travel">Du lịch/khách sạn</option><option value="entertainment">Sản phẩm số/giải trí số</option></select>
+            <div class="mini">Hoàn 20%, trần 300k/kỳ nếu đúng nhóm đã chọn.</div>
+          </div>
+
+          <div class="settingBox">
+            <h4>BVBank Lifestyle - nhóm tự chọn</h4>
+            <select id="bvbLifeCat"><option value="dining">Ăn uống</option><option value="fashion">Thời trang</option><option value="travel">Du lịch</option></select>
+            <div class="mini">Phải đạt tổng chi tiêu hợp lệ từ 3 triệu/tháng.</div>
+          </div>
+
+          <div class="settingBox">
+            <h4>VIB Max Card - gói hội viên</h4>
+            <select id="vibMaxPlan"><option value="starter">Starter 0.5%</option><option value="plus">Plus 5%</option><option value="pro">Pro 8%</option><option value="elite">Elite 10%</option></select>
+            <div class="mini">App tính lợi ròng = hoàn tiền - phí gói tháng.</div>
+          </div>
+
+          <div class="settingBox">
+            <h4>VIB Super Card - nhóm tự chọn</h4>
+            <select id="vibSuperMode">
+              <option value="foreign15">Giao dịch nước ngoài 15%</option>
+              <option value="dining10">Ẩm thực 10%</option>
+              <option value="travel10">Du lịch 10%</option>
+              <option value="shopping10">Mua sắm 10%</option>
+              <option value="online5">Giao dịch trực tuyến 5%</option>
+            </select>
+            <div class="mini">Không cần chọn trước để app gợi ý. Mục này chỉ để lưu nhóm má đang dùng; khi giao dịch phù hợp app vẫn sẽ nhắc cần chọn đúng danh mục trong MyVIB.</div>
+          </div>
+
+
+          <div class="settingBox">
+            <h4>MB Priority Visa Signature</h4>
+            <label>Nhóm 10%</label>
+            <select id="mb10"><option value="travel">Du lịch</option><option value="dining">Ăn uống</option><option value="entertainment">Giải trí</option><option value="life">Đầu tư cuộc sống</option></select>
+            <label>Nhóm 2% #1</label>
+            <select id="mb2a"><option value="supermarket">Siêu thị</option><option value="fashion">Thời trang</option><option value="ecommerce">Mua sắm online</option><option value="transport">Di chuyển</option><option value="health">Sức khỏe</option></select>
+            <label>Nhóm 2% #2</label>
+            <select id="mb2b"><option value="ecommerce">Mua sắm online</option><option value="supermarket">Siêu thị</option><option value="fashion">Thời trang</option><option value="transport">Di chuyển</option><option value="health">Sức khỏe</option></select>
+            <div class="mini">Cần DSCT tối thiểu 10 triệu/kỳ sao kê.</div>
+          </div>
+
+          <div class="settingBox">
+            <h4>MB JCB Platinum</h4>
+            <label class="check"><input id="mbJcbPriority" type="checkbox" /> Tôi là khách hàng ưu tiên / đủ điều kiện MB JCB Platinum</label>
+            <div class="mini">Nếu không tick, app sẽ không gợi ý thẻ này.</div>
+          </div>
+
+          <div class="settingBox">
+            <h4>Bật/tắt thẻ đang sở hữu</h4>
+            <div id="ownedCards" class="switches"></div>
+          </div>
+
+          <div class="settingBox" style="grid-column:1/-1">
+            <h4>Hạn mức, ngày sao kê và nhắc thanh toán</h4>
+            <div class="mini">Nhập hạn mức, dư nợ, ngày sao kê và số ngày đến hạn của từng thẻ. Một số thẻ cho chọn ngày sao kê nên má chỉnh trực tiếp ở đây.</div>
+            <div id="cardLimits" class="list" style="margin-top:10px"></div>
+          </div>
+
+          <div class="settingBox" style="grid-column:1/-1">
+            <h4>Backup dữ liệu</h4>
+            <div class="mini">Xuất/nhập toàn bộ dữ liệu đang lưu trên máy này: cài đặt thẻ, lịch sử chi tiêu, khoản cho mượn thẻ, hạn mức và ngày nhắc thanh toán.</div>
+            <label>File backup JSON để nhập lại</label>
+            <input id="backupImportFile" type="file" accept="application/json,.json" />
+            <div class="backupActions">
+              <button class="secondary" id="exportBackup" type="button">Xuất backup JSON</button>
+              <button class="secondary" id="importBackup" type="button">Nhập backup JSON</button>
+            </div>
+            <div id="backupStatus" class="backupStatus">Nên xuất backup trước khi đổi máy, xóa cache Safari hoặc chỉnh nhiều rule.</div>
+          </div>
+
+        </div>
+        <div class="btns">
+          <button class="primary" id="saveSettings">Lưu cài đặt</button>
+          <button class="secondary" id="resetSettings">Reset</button>
+          <button class="secondary" id="enableAllCards">Bật lại toàn bộ thẻ mới thêm</button>
+        </div>
+      </div>
+
+      <div id="tab-cards" class="body hidden">
+        <h2>Danh sách rule trong bản thử nghiệm</h2>
+        <div id="cardList" class="list"></div>
+      </div>
+
+      <div id="tab-about" class="body hidden">
+        <h2>Ghi chú dữ liệu</h2>
+        <p class="source">
+          Bản này được dựng từ các rule đã trao đổi: VPBank StepUP, Cake, MSB, Sacombank, Standard Chartered, Techcombank, Woori, MB, ACB, UOB Lazada, CIMB, NCB, BVBank, VIB, Shinhan, HDBank, OCB...
+        </p>
+        <p class="source">
+          Hai rule đã được đối chiếu từ file má gửi: HDBank Vietjet Platinum hoàn 10% du lịch/ẩm thực với MCC 4722, 5811, 5812, 5813, 5921; MB Priority Visa Signature hoàn 10%/2%, điều kiện DSCT 10 triệu/kỳ sao kê, tổng hoàn 800k/kỳ.
+        </p>
+        <p class="source">
+          Bản thử nghiệm không tự crawl RCGV. MCC nên được xác nhận bằng sao kê/app ngân hàng sau giao dịch đầu tiên. Từ bản này, app không tự giả định đã đủ doanh số chi tiêu; điều kiện DSCT mặc định được xét theo số đã chi trong kỳ cộng hóa đơn đang hỏi. App cũng có nhập hạn mức từng thẻ, ngày sao kê/ngày đến hạn để nhắc thanh toán, ngày sinh cá nhân để tự xét ưu đãi sinh nhật, lịch sử chi tiêu thủ công, lưu ảnh hóa đơn và quản lý khoản cho bạn/người thân mượn thẻ.
+        </p>
+      </div>
+    </section>
+  </main>
+
+<script>
+const fmt = n => new Intl.NumberFormat('vi-VN').format(Math.max(0, Math.floor(n))) + 'đ';
+const val = id => document.getElementById(id).value;
+const parseMoney = value => {
+  const s = String(value ?? '').trim();
+  if(!s) return 0;
+  const sign = s.includes('-') ? -1 : 1;
+  const digits = s.replace(/[^\d]/g,'');
+  return digits ? sign * Number(digits) : 0;
+};
+const num = id => parseMoney(val(id));
+const $ = id => document.getElementById(id);
+const escapeHtml = str => String(str ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const moneyInputSelector = '#amount,#monthSpend,#expenseAmount,#loanAmount,#loanPaidAmount,#bulkPayAmount,[data-limit],[data-used]';
+const moneyDigits = value => String(value ?? '').replace(/[^\d]/g,'');
+function formatMoneyForInput(value){
+  const digits = moneyDigits(value).replace(/^0+(?=\d)/,'');
+  if(!digits) return '';
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+}
+function bindMoneyInput(el){
+  if(!el || el.dataset.moneyBound === '1') return;
+  el.dataset.moneyBound = '1';
+  el.addEventListener('input',()=>{
+    el.value = formatMoneyForInput(el.value);
+  });
+  el.addEventListener('blur',()=>{
+    el.value = formatMoneyForInput(el.value);
+  });
+}
+function setupMoneyInputs(scope=document){
+  scope.querySelectorAll(moneyInputSelector).forEach(el=>{
+    bindMoneyInput(el);
+    if(el.value) el.value = formatMoneyForInput(el.value);
+  });
+}
+function setMoneyValue(id, value){
+  const el = $(id);
+  if(!el) return;
+  el.value = value === '' || value === null || value === undefined ? '' : formatMoneyForInput(value);
+}
+
+const cards = [
+  {id:'vp_stepup', name:'VPBank StepUP Mastercard', tags:['online','dining'], summary:'Online đến 15%, ăn uống 4%, phụ thuộc DSCT kỳ sao kê và trần.'},
+  {id:'cake', name:'Cake Freedom 2in1 / Visa Cake', tags:['20%','flex'], summary:'20% cho 3 nhóm cố định + 2 nhóm linh hoạt; trần theo giao dịch/danh mục/kỳ.'},
+  {id:'msb_mdigi', name:'MSB Mastercard mDigi', tags:['20%','chosen'], summary:'Chọn 1 nhóm: ăn uống / du lịch / giải trí số. Hoàn 20%, trần 300k/kỳ.'},
+  {id:'msb_online', name:'MSB Visa Online', tags:['online','10%'], summary:'Online 10%, trần 300k/kỳ, cần DSCT từ 3 triệu/kỳ.'},
+  {id:'vp_debit_prime', name:'VPBank Visa Prime Platinum Debit', tags:['debit','contactless'], summary:'Contactless POS 3%, online 1%, khác 0.3%; trần online+contactless 400k/tháng.'},
+  {id:'sacombank_uniq', name:'Sacombank Visa UNIQ Platinum', tags:['supermarket','transport'], summary:'Siêu thị/di chuyển 20%, 50% giao dịch đầu 30 ngày; trần nhóm 300k, tổng 600k/kỳ.'},
+  {id:'sc_simplycash', name:'Standard Chartered Platinum Simply Cash', tags:['base','no cap'], summary:'0.5% nội địa, 1% ngoại tệ; không giới hạn nhưng ngoại tệ có phí.'},
+  {id:'tcb_debit_platinum', name:'Techcombank Visa Platinum Debit', tags:['debit','U-Point'], summary:'U-Point siêu thị/cửa hàng tiện lợi/giải trí, phụ thuộc hội viên Inspire.'},
+  {id:'tcb_everyday', name:'Techcombank Everyday', tags:['online','points'], summary:'Online nội địa 5%, online quốc tế 8%; thưởng thêm khi DSCT từ 15 triệu.'},
+  {id:'woori_z', name:'Woori Visa Debit Z Card', tags:['debit','online'], summary:'Online 2% Wcard-Point, trần 500k điểm/tháng.'},
+  {id:'mb_jcb_shopeefood', name:'MB JCB Hi ShopeeFood', tags:['voucher','ShopeeFood'], summary:'Ưu đãi chính theo voucher/campaign ShopeeFood, không phải cashback cố định.'},
+  {id:'acb_platinum', name:'ACB Visa Platinum', tags:['5% points'], summary:'5% ACB Rewards cho ăn uống, mua sắm online và Apple Pay/Samsung Pay/Google Pay/Garmin Pay; trần 100k điểm/lĩnh vực/tháng.'},
+  {id:'uob_lazada', name:'Lazada UOB Credit Card', tags:['Lazada','points'], summary:'10X Lazada tới 4 triệu chi tiêu/tháng; có voucher Lazada theo chiến dịch.'},
+  {id:'cimb_revi', name:'CIMB REVI Credit Card', tags:['20%'], summary:'20% nhiều nhóm, cần DSCT từ 3 triệu; trần 100k/danh mục, 500k/tháng.'},
+  {id:'vp_srewards', name:'VPBank S Rewards Mastercard', tags:['Shopee','ShopeeFood'], summary:'Cần DSCT từ 5tr/kỳ; Shopee + ShopeeFood 12% chung trần 400k xu/tháng; ăn uống/siêu thị/di chuyển 4% trần 200k; khác 0,1%.'},
+  {id:'ncb_tuhao', name:'NCB Visa Tự Hào', tags:['museum','charity'], summary:'MCC 7991 hoàn 100% tối đa 200k/tháng; giao dịch thường góp ví từ thiện.'},
+  {id:'bvb_lifestyle', name:'BVBank VISA Lifestyle', tags:['ChatGPT','flex'], summary:'ChatGPT/Netflix/VieON 50% trần 50k/merchant; nhóm tự chọn theo DSCT từ 3 triệu.'},
+  {id:'bvb_jcb_sense', name:'BVBank JCB Sense', tags:['fashion','dining'], summary:'Thời trang/ăn uống 5-20% tùy DSCT; Uniqlo 50k điểm/lần/tháng.'},
+  {id:'vib_2in1', name:'VIB Online Plus 2in1', tags:['online'], summary:'Online đến 5%, online nội địa 3%, khác 0.1%; trần 600k điểm/kỳ.'},
+  {id:'shinhan_hi', name:'Shinhan Visa Gold Hi-Point', tags:['Shopee','Grab'], summary:'0.3% nền; Shopee/Grab/đối tác 5% nếu DSCT kỳ sao kê từ 3 triệu, trần 400k điểm.'},
+  {id:'hdb_vietjet', name:'HDBank Vietjet Platinum', tags:['Vietjet','dining'], summary:'Vietjet 10% trần 500k; du lịch/ẩm thực MCC riêng 10% trần 300k; khác 0.3%.'},
+  {id:'mb_priority_sig', name:'MB Priority Visa Signature', tags:['selected','lounge'], summary:'Chọn 1 nhóm 10% + 2 nhóm 2%; cần DSCT 10 triệu/kỳ; tổng hoàn 800k/kỳ.'},
+  {id:'ocb_igen', name:'OCB iGen Mastercard Platinum', tags:['Shopee','TikTok'], summary:'Shopee/TikTok 7-12%, Apple/Google Pay 3%, cần DSCT từ 5 triệu/tháng.'},
+  {id:'vib_supercard', name:'VIB Super Card', tags:['Amex','flex'], summary:'Nhóm mới: Nước ngoài 15%, Ẩm thực 10%, Du lịch 10%, Mua sắm 10%, Online 5%; khác 0.1%. Trần tổng 1.000.000 điểm/kỳ, 500.000 điểm/danh mục.'},
+  {id:'vib_max', name:'VIB Max Card', tags:['membership'], summary:'Gói Starter/Plus/Pro/Elite; danh mục chính 0.5-10%, tính lợi ròng sau phí gói.'},
+  {id:'sacombank_cashback', name:'Sacombank Visa Platinum Cashback', tags:['online','cashback'], summary:'Online trong/ngoài nước 5%, POS nước ngoài 3%, giao dịch khác 0.5%; trần 600k/kỳ TBGD.'},
+  {id:'sacombank_amex_credit', name:'Sacombank Platinum American Express Credit', tags:['travel','foreign'], summary:'Vé máy bay/khách sạn/đại lý du lịch 20%, POS nước ngoài 10%, online nước ngoài 5%, khác 0.5%; trần 1tr/kỳ TBGD.'},
+  {id:'mb_jcb_platinum', name:'MB JCB Platinum', tags:['priority','JCB'], summary:'Chỉ tính nếu đủ điều kiện khách hàng ưu tiên; ẩm thực/siêu thị Nhật 5-10%.'},
+];
+
+const defaults = {
+  cakeFlex1:'dining', cakeFlex2:'supermarket', msbMdigiCat:'dining', bvbLifeCat:'dining',
+  vibMaxPlan:'elite', vibSuperMode:'online5', mb10:'dining', mb2a:'supermarket', mb2b:'ecommerce', mbJcbPriority:false,
+  owned:Object.fromEntries(cards.map(c=>[c.id,true])),
+  cardLimits:Object.fromEntries(cards.map(c=>[c.id,{limit:0,used:0}])),
+  personalBirthday:'',
+  paymentRules:Object.fromEntries(cards.map(c=>[c.id,{statementDay:20,dueDays:15,remindBefore:3,paid:false}]))
+};
+
+let settings = JSON.parse(localStorage.getItem('co_settings') || 'null') || structuredClone(defaults);
+if(!settings.owned) settings.owned = structuredClone(defaults.owned);
+if(!settings.cardLimits) settings.cardLimits = structuredClone(defaults.cardLimits);
+if(!settings.paymentRules) settings.paymentRules = structuredClone(defaults.paymentRules);
+cards.forEach(c=>{
+  if(settings.owned[c.id] === undefined) settings.owned[c.id] = true;
+  if(!settings.cardLimits[c.id]) settings.cardLimits[c.id] = {limit:0,used:0};
+  if(!settings.paymentRules[c.id]) settings.paymentRules[c.id] = {statementDay:20,dueDays:15,remindBefore:3,paid:false};
+});
+if(!settings.vibSuperMode || ['foreign10','online10','dining15','shopping15','travel15','trio10'].includes(settings.vibSuperMode)) settings.vibSuperMode = 'online5';
+localStorage.setItem('co_settings', JSON.stringify(settings));
+let expenses = JSON.parse(localStorage.getItem('co_expenses') || '[]');
+let loanRecords = JSON.parse(localStorage.getItem('co_loans') || '[]');
+loanRecords = loanRecords.map(x=>({
+  ...x,
+  amountPaid: Number(x.amountPaid || (x.paid ? x.amount : 0)) || 0,
+  payments: Array.isArray(x.payments) ? x.payments : []
+}));
+localStorage.setItem('co_loans', JSON.stringify(loanRecords));
+let lastCalcContext = null;
+
+function todayLocal(){
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0,10);
+}
+
+function adjustCardUsed(cardId, delta){
+  const amount = Number(delta) || 0;
+  if(!cardId || !amount) return;
+  settings.cardLimits = settings.cardLimits || {};
+  settings.cardLimits[cardId] = settings.cardLimits[cardId] || {limit:0, used:0};
+  settings.cardLimits[cardId].used = Math.max(0, Number(settings.cardLimits[cardId].used || 0) + amount);
+  localStorage.setItem('co_settings', JSON.stringify(settings));
+}
+
+function markDebtTracked(record){
+  return {...record, affectsDebt:true, debtTrackedAt:todayLocal()};
+}
+
+function untrackExpenseDebt(record){
+  if(record && record.affectsDebt === true){
+    adjustCardUsed(record.cardId, -Number(record.amount || 0));
+  }
+}
+
+function persistExpenses(){
+  const dropped = expenses.slice(80);
+  dropped.forEach(untrackExpenseDebt);
+  expenses = expenses.slice(0,80);
+  localStorage.setItem('co_expenses', JSON.stringify(expenses));
+}
+
+function loadSettingsUI(){
+  ['cakeFlex1','cakeFlex2','msbMdigiCat','bvbLifeCat','vibMaxPlan','vibSuperMode','mb10','mb2a','mb2b'].forEach(id=>$(id).value=settings[id]||defaults[id]);
+  if($('personalBirthday')) $('personalBirthday').value = settings.personalBirthday || '';
+  $('mbJcbPriority').checked=!!settings.mbJcbPriority;
+  const owned = $('ownedCards'); owned.innerHTML='';
+  cards.forEach(c=>{
+    const label=document.createElement('label'); label.className='check';
+    label.innerHTML=`<input type="checkbox" data-owned="${c.id}" ${settings.owned[c.id]?'checked':''}/> ${c.name}`;
+    owned.appendChild(label);
+  });
+
+  const limits = $('cardLimits'); limits.innerHTML='';
+  cards.forEach(c=>{
+    const lim = settings.cardLimits[c.id] || {limit:0,used:0};
+    const box=document.createElement('div'); box.className='dataCard';
+    const pay = settings.paymentRules[c.id] || {statementDay:20,dueDays:15,remindBefore:3,paid:false};
+    box.innerHTML=`
+      <h4>${c.name}</h4>
+      <div class="row">
+        <div>
+          <label>Hạn mức</label>
+          <input inputmode="numeric" data-limit="${c.id}" value="${lim.limit ? formatMoneyForInput(lim.limit) : ''}" placeholder="Ví dụ 50.000.000" />
+        </div>
+        <div>
+          <label>Đã dùng / dư nợ hiện tại</label>
+          <input inputmode="numeric" data-used="${c.id}" value="${lim.used ? formatMoneyForInput(lim.used) : ''}" placeholder="Ví dụ 12.000.000" />
+        </div>
+      </div>
+      <div class="row3">
+        <div>
+          <label>Ngày sao kê</label>
+          <input inputmode="numeric" min="1" max="31" data-statement-day="${c.id}" value="${pay.statementDay||''}" placeholder="1-31" />
+        </div>
+        <div>
+          <label>Số ngày đến hạn</label>
+          <input inputmode="numeric" data-due-days="${c.id}" value="${pay.dueDays||''}" placeholder="Ví dụ 15" />
+        </div>
+        <div>
+          <label>Nhắc trước</label>
+          <input inputmode="numeric" data-remind-before="${c.id}" value="${pay.remindBefore ?? 3}" placeholder="Ví dụ 3" />
+        </div>
+      </div>
+      <label class="check" style="margin-top:10px">
+        <input type="checkbox" data-paid="${c.id}" ${pay.paid?'checked':''}/> Đã thanh toán kỳ hiện tại
+      </label>`;
+    limits.appendChild(box);
+  });
+
+  const expCard = $('expenseCard');
+  if(expCard){
+    expCard.innerHTML = cards.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  }
+  const loanCard = $('loanCard');
+  if(loanCard){
+    loanCard.innerHTML = cards.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  }
+  setupMoneyInputs();
+}
+
+function saveSettings(){
+  ['cakeFlex1','cakeFlex2','msbMdigiCat','bvbLifeCat','vibMaxPlan','vibSuperMode','mb10','mb2a','mb2b'].forEach(id=>settings[id]=$(id).value);
+  if($('personalBirthday')) settings.personalBirthday = $('personalBirthday').value || '';
+  settings.mbJcbPriority=$('mbJcbPriority').checked;
+  settings.owned={};
+  document.querySelectorAll('[data-owned]').forEach(ch=>settings.owned[ch.dataset.owned]=ch.checked);
+  settings.cardLimits = settings.cardLimits || {};
+  document.querySelectorAll('[data-limit]').forEach(inp=>{
+    const id = inp.dataset.limit;
+    settings.cardLimits[id] = settings.cardLimits[id] || {limit:0,used:0};
+    settings.cardLimits[id].limit = parseMoney(inp.value);
+  });
+  document.querySelectorAll('[data-used]').forEach(inp=>{
+    const id = inp.dataset.used;
+    settings.cardLimits[id] = settings.cardLimits[id] || {limit:0,used:0};
+    settings.cardLimits[id].used = parseMoney(inp.value);
+  });
+  settings.paymentRules = settings.paymentRules || {};
+  document.querySelectorAll('[data-statement-day]').forEach(inp=>{
+    const id = inp.dataset.statementDay;
+    settings.paymentRules[id] = settings.paymentRules[id] || {statementDay:20,dueDays:15,remindBefore:3,paid:false};
+    let day = Number(String(inp.value).replace(/[^\d]/g,'')) || 20;
+    settings.paymentRules[id].statementDay = Math.min(31, Math.max(1, day));
+  });
+  document.querySelectorAll('[data-due-days]').forEach(inp=>{
+    const id = inp.dataset.dueDays;
+    settings.paymentRules[id] = settings.paymentRules[id] || {statementDay:20,dueDays:15,remindBefore:3,paid:false};
+    settings.paymentRules[id].dueDays = Number(String(inp.value).replace(/[^\d]/g,'')) || 15;
+  });
+  document.querySelectorAll('[data-remind-before]').forEach(inp=>{
+    const id = inp.dataset.remindBefore;
+    settings.paymentRules[id] = settings.paymentRules[id] || {statementDay:20,dueDays:15,remindBefore:3,paid:false};
+    settings.paymentRules[id].remindBefore = Number(String(inp.value).replace(/[^\d]/g,'')) || 3;
+  });
+  document.querySelectorAll('[data-paid]').forEach(inp=>{
+    const id = inp.dataset.paid;
+    settings.paymentRules[id] = settings.paymentRules[id] || {statementDay:20,dueDays:15,remindBefore:3,paid:false};
+    settings.paymentRules[id].paid = inp.checked;
+  });
+  localStorage.setItem('co_settings', JSON.stringify(settings));
+}
+
+function stripVietnamese(str){
+  return String(str || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/đ/g,'d')
+    .replace(/[^a-z0-9\s]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function inferMerchantCat(merchant){
+  const raw = String(merchant || '').toLowerCase().trim();
+  const m = stripVietnamese(raw);
+  if(!m) return '';
+
+  // Không đánh đồng “điện máy / điện thoại” với tiền điện.
+  if(/dien\s*may|dienmayxanh|the gioi di dong|tgdd|nguyen kim|cellphones|fpt shop/.test(m)) return 'shopping';
+
+  if(/^(dien|tien dien|hoa don dien)$/.test(m) || /evn|dien luc|dien nuoc|tien dien|hoa don dien|electric|power bill|utility|utilities|cap nuoc|nuoc sach|water bill/.test(m)) return 'utilities';
+  if(/internet|wifi|cap quang|viettel|mobifone|vinaphone|fpt telecom|vnpt|telecom|phone bill|cuoc dien thoai|nap dien thoai/.test(m)) return 'telecom';
+  if(/xang|dau|petrolimex|pvoil|fuel|gas station/.test(m)) return 'fuel';
+  if(/bao hiem|insurance/.test(m)) return 'insurance';
+  if(/hoc phi|truong hoc|education|tuition/.test(m)) return 'education';
+  if(/benh vien|phong kham|nha thuoc|hospital|clinic|pharmacy/.test(m)) return 'health';
+  return '';
+}
+
+function isGenericCategory(cat){
+  return !cat || ['online','ecommerce','other'].includes(cat);
+}
+
+function effectiveCategory(ctx){
+  const category = ctx.category || '';
+  const mccCat = ctx.mccCat || inferMccCat(ctx.mcc || '');
+  const merchantCat = ctx.merchantCat || inferMerchantCat(ctx.merchant || '');
+  if(mccCat && isGenericCategory(category)) return mccCat;
+  if(merchantCat && isGenericCategory(category)) return merchantCat;
+  return category || mccCat || merchantCat || '';
+}
+
+function blocksGenericOnline(ctx){
+  const cat = effectiveCategory(ctx);
+  return ['utilities','telecom','fuel','insurance','education','health','passenger_transport'].includes(cat);
+}
+
+function isRewardableOnline(ctx){
+  return ctx.channel === 'online' && !blocksGenericOnline(ctx);
+}
+
+function isHardExcludedBill(ctx){
+  const cat = effectiveCategory(ctx);
+  return ['utilities','telecom','fuel','passenger_transport'].includes(cat);
+}
+
+function catMatches(ctx, cats){
+  const category = ctx.category || '';
+  const mccCat = ctx.mccCat || inferMccCat(ctx.mcc || '');
+  const merchantCat = ctx.merchantCat || inferMerchantCat(ctx.merchant || '');
+  const effCat = effectiveCategory(ctx);
+  const merchant = String(ctx.merchant || '').toLowerCase();
+  const merchantNorm = stripVietnamese(merchant);
+  const blockOnline = blocksGenericOnline(ctx);
+
+  if(cats.includes(effCat) || cats.includes(mccCat) || cats.includes(merchantCat)) return true;
+  if(!blockOnline && cats.includes(category)) return true;
+  if(cats.includes('shopeefood') && merchantNorm.includes('shopeefood')) return true;
+  if(cats.includes('shopee') && merchantNorm.includes('shopee') && !merchantNorm.includes('shopeefood')) return true;
+  if(cats.includes('lazada') && merchantNorm.includes('lazada')) return true;
+  if(cats.includes('tiktok') && merchantNorm.includes('tiktok')) return true;
+  if(cats.includes('ecommerce') && !blockOnline && (['shopee','lazada','tiktok','ecommerce'].includes(effCat) || ['shopee','lazada','tiktok','ecommerce'].includes(category) || ['shopee','lazada','tiktok','ecommerce'].includes(mccCat))) return true;
+  if(cats.includes('online') && !blockOnline && (isRewardableOnline(ctx) || ['online','ecommerce','shopee','shopeefood','lazada','tiktok'].includes(effCat) || ['shopee','shopeefood','lazada','tiktok'].includes(category))) return true;
+  if(cats.includes('hotel') && ['travel','hotel'].includes(effCat)) return true;
+  if(cats.includes('cinema') && ['cinema','entertainment'].includes(effCat)) return true;
+  return false;
+}
+function inferMccCat(mcc){
+  if(['5811','5812','5813','5814','5921'].includes(mcc)) return 'dining';
+  if(['5411'].includes(mcc)) return 'supermarket';
+  if(['5499'].includes(mcc)) return 'convenience';
+  if(['4121','4011','4112'].includes(mcc)) return 'transport';
+  if(['4722'].includes(mcc)) return 'travel';
+  if(['7011','7012','7033'].includes(mcc)) return 'hotel';
+  if(['4511'].includes(mcc)) return 'airline';
+  if(['5262'].includes(mcc)) return 'ecommerce';
+  if(['7832'].includes(mcc)) return 'cinema';
+  if(['4829','6540','7399','8999'].includes(mcc)) return 'professional_ewallet';
+  if(['4812','4814','4816','4899'].includes(mcc)) return 'telecom';
+  if(['4900'].includes(mcc)) return 'utilities';
+  if(['4111'].includes(mcc)) return 'passenger_transport';
+  if(['5541'].includes(mcc)) return 'fuel';
+  if(['5611','5621','5631','5641','5651','5661','5691','5699'].includes(mcc)) return 'fashion';
+  if(['7832','4899'].includes(mcc)) return 'entertainment';
+  if(['7991'].includes(mcc)) return 'museum';
+  if(['6300'].includes(mcc)) return 'insurance';
+  if(['8011','8021','8031','8041','8042','8043','8049','8050','8062','8071','8099'].includes(mcc)) return 'health';
+  if(['8211','8220','8241','8244','8249','8299'].includes(mcc)) return 'education';
+  return '';
+}
+
+
+function gapText(spend, threshold){
+  const gap = Math.max(0, threshold - spend);
+  return gap > 0
+    ? `<span class="thresholdAlert">Nếu chi tiêu thêm ${fmt(gap)} trong kỳ thì sẽ đủ mốc ${fmt(threshold)} để nhận ưu đãi.</span>`
+    : `<span class="thresholdAlert" style="color:#12805c">Đã đạt mốc ${fmt(threshold)}.</span>`;
+}
+
+
+function getCardHistorySpend(cardId, txDate){
+  const base = txDate ? new Date(txDate + 'T00:00:00') : new Date();
+  const y = base.getFullYear();
+  const m = base.getMonth();
+  return expenses
+    .filter(e => e.cardId === cardId)
+    .filter(e => {
+      const d = e.date ? new Date(e.date + 'T00:00:00') : null;
+      return d && d.getFullYear() === y && d.getMonth() === m;
+    })
+    .reduce((sum,e)=>sum + (Number(e.amount)||0), 0);
+}
+
+function dsctText(ctx, historySpend, spend){
+  if(ctx.spendMode === 'optimistic') {
+    return `<span class="thresholdAlert" style="color:#b7791f">Đang dùng chế độ giả định cuối kỳ đạt mốc.</span>`;
+  }
+  const currentPart = ctx.spendMode === 'after' ? ctx.amount : 0;
+  const manualPart = ctx.manualSpend || 0;
+  return `<span class="thresholdAlert" style="color:#b91c1c">DSCT đang tính cho thẻ này = lịch sử đã lưu ${fmt(historySpend)} + cộng thêm thủ công ${fmt(manualPart)}${currentPart ? ' + hóa đơn này ' + fmt(currentPart) : ''} = ${fmt(spend)}.</span>`;
+}
+
+
+function expenseLooksLike(e, categories){
+  const ctx = {...e, mccCat: inferMccCat(e.mcc || ''), merchantCat: inferMerchantCat(e.merchant || '')};
+  const cat = effectiveCategory(ctx);
+  const merchant = stripVietnamese(e.merchant || '');
+  if(categories.includes(cat) || categories.includes(ctx.mccCat) || categories.includes(ctx.merchantCat)) return true;
+  if(categories.includes('shopee') && merchant.includes('shopee') && !merchant.includes('shopeefood')) return true;
+  if(categories.includes('shopeefood') && merchant.includes('shopeefood')) return true;
+  if(categories.includes('lazada') && merchant.includes('lazada')) return true;
+  if(categories.includes('tiktok') && merchant.includes('tiktok')) return true;
+  if(categories.includes('online') && !blocksGenericOnline(ctx) && ['online','ecommerce','shopee','lazada','tiktok','shopeefood'].includes(cat)) return true;
+  return false;
+}
+
+function getCardHistoryExpenses(cardId, txDate){
+  const base = txDate ? new Date(txDate + 'T00:00:00') : new Date();
+  const y = base.getFullYear();
+  const m = base.getMonth();
+  return expenses
+    .filter(e => e.cardId === cardId)
+    .filter(e => {
+      const d = e.date ? new Date(e.date + 'T00:00:00') : null;
+      return d && d.getFullYear() === y && d.getMonth() === m;
+    });
+}
+
+function historicalRewardUsed(cardId, txDate, categories, rate, cap){
+  const totalRaw = getCardHistoryExpenses(cardId, txDate)
+    .filter(e => expenseLooksLike(e, categories))
+    .reduce((sum,e)=>sum + (Number(e.amount)||0) * rate, 0);
+  return Math.min(totalRaw, cap || totalRaw);
+}
+
+
+
+function vpSRewardsIsExcluded(obj){
+  const mcc = String(obj.mcc || '').trim();
+  const cat = effectiveCategory({...obj, mccCat: obj.mccCat || inferMccCat(mcc), merchantCat: obj.merchantCat || inferMerchantCat(obj.merchant || '')});
+  const merchant = stripVietnamese(obj.merchant || '');
+  const excludedMcc = ['6011','5172','5541','5542','5983','4812','4814','4816','4899','4900'];
+  if(excludedMcc.includes(mcc)) return true;
+  if(['atm','fuel','telecom','utilities'].includes(cat)) return true;
+  if(merchant.includes('vpbank neo')) return true;
+  return false;
+}
+
+function vpSRewardsEligibleSpendFromExpenses(exps){
+  return exps
+    .filter(e=>!vpSRewardsIsExcluded(e))
+    .reduce((sum,e)=>sum+(Number(e.amount)||0),0);
+}
+
+function vpSRewardsEligibleSpend(cardId, ctx, baseHistorySpend){
+  const hist = getCardHistoryExpenses(cardId, ctx.txDate || val('date'));
+  let eligible = vpSRewardsEligibleSpendFromExpenses(hist) + (ctx.manualSpend || 0);
+  const currentExcluded = vpSRewardsIsExcluded(ctx);
+  if(ctx.spendMode === 'after' && !currentExcluded) eligible += ctx.amount;
+  if(ctx.spendMode === 'optimistic') eligible = 999999999;
+  return {eligible, currentExcluded};
+}
+
+function vpSRewardsDsctText(ctx, eligibleSpend){
+  if(ctx.spendMode === 'optimistic') return `<span class="thresholdAlert" style="color:#b7791f">Đang dùng chế độ giả định cuối kỳ đạt mốc.</span>`;
+  return `<span class="thresholdAlert" style="color:#b91c1c">DSCT hợp lệ S Rewards đang tính = ${fmt(eligibleSpend)}. Đã loại trừ xăng dầu, tiện ích, viễn thông, ATM, VPBank NEO và các giao dịch không hợp lệ.</span>`;
+}
+
+function acbPlatinumGroup(ctxOrExpense){
+  const category = ctxOrExpense.category || '';
+  const mccCat = inferMccCat(ctxOrExpense.mcc || '');
+  const merchant = stripVietnamese(ctxOrExpense.merchant || '');
+  const merchantCat = ctxOrExpense.merchantCat || inferMerchantCat(ctxOrExpense.merchant || '');
+  const channel = ctxOrExpense.channel || '';
+  const effCat = effectiveCategory({...ctxOrExpense, mccCat, merchantCat});
+
+  if(effCat === 'dining' || mccCat === 'dining') return 'dining';
+  if(!blocksGenericOnline({...ctxOrExpense, mccCat, merchantCat}) && (['online','ecommerce','shopee','lazada','tiktok'].includes(effCat) || ['shopee','lazada','tiktok'].some(x=>merchant.includes(x)))) return 'online';
+  if(channel === 'wallet' || category === 'wallet') return 'wallet';
+  return '';
+}
+
+function historicalAcbPlatinumUsed(cardId, txDate, group){
+  if(!group) return 0;
+  const totalRaw = getCardHistoryExpenses(cardId, txDate)
+    .filter(e => acbPlatinumGroup(e) === group)
+    .reduce((sum,e)=>sum + (Number(e.amount)||0) * 0.05, 0);
+  return Math.min(totalRaw, 100000);
+}
+
+function capRewardWithHistory(cardId, ctx, categories, rate, cap){
+  const used = historicalRewardUsed(cardId, ctx.txDate || val('date'), categories, rate, cap);
+  const remaining = Math.max(0, cap - used);
+  const rawCurrent = ctx.amount * rate;
+  const reward = Math.min(rawCurrent, remaining);
+  return {used, remaining, rawCurrent, reward, cap, rate};
+}
+
+function capTextWithHistory(info){
+  if(!info || !info.cap) return '';
+  const afterRemaining = Math.max(0, info.remaining - info.reward);
+  const base = `
+    <div class="thresholdAlert" style="color:${info.used >= info.cap || info.rawCurrent >= info.remaining ? '#b91c1c' : '#12805c'}">
+      <div><b>Trần hoàn:</b> ${fmt(info.cap)}</div>
+      <div><b>Đã dùng từ lịch sử:</b> ${fmt(info.used)}</div>
+      <div><b>Còn trần trước giao dịch này:</b> ${fmt(info.remaining)}</div>
+      <div><b>Ước tính hoàn cho giao dịch này:</b> ${fmt(info.reward)}</div>
+      <div><b>Còn trần sau giao dịch này:</b> ${fmt(afterRemaining)}</div>
+      ${info.rate ? `<div><b>Chi tiêu tối đa còn nên dùng cho nhóm này trước giao dịch:</b> ${fmt(Math.floor(info.remaining/info.rate))}</div>` : ''}
+    </div>`;
+  if(info.used >= info.cap){
+    return `
+      <div class="thresholdAlert" style="color:#b91c1c">
+        <div><b>Đã hết hạn mức hoàn.</b></div>
+        <div><b>Trần hoàn:</b> ${fmt(info.cap)}</div>
+        <div><b>Đã dùng từ lịch sử:</b> ${fmt(info.used)}</div>
+        <div><b>Giao dịch này:</b> không còn trần để hoàn thêm.</div>
+      </div>`;
+  }
+  if(info.rawCurrent >= info.remaining){
+    return `
+      <div class="thresholdAlert" style="color:#b91c1c">
+        <div><b>Sau giao dịch này sẽ hết hạn mức hoàn.</b></div>
+        <div><b>Trần hoàn:</b> ${fmt(info.cap)}</div>
+        <div><b>Đã dùng từ lịch sử:</b> ${fmt(info.used)}</div>
+        <div><b>Còn trần trước giao dịch này:</b> ${fmt(info.remaining)}</div>
+        <div><b>Giao dịch này chỉ nhận tối đa:</b> ${fmt(info.reward)}</div>
+        <div><b>Còn trần sau giao dịch này:</b> 0đ</div>
+        ${info.rate ? `<div><b>Gợi ý:</b> chỉ nên dùng khoảng ${fmt(Math.floor(info.remaining/info.rate))} cho nhóm này, phần dư nên chuyển thẻ khác.</div>` : ''}
+      </div>`;
+  }
+  return base;
+}
+
+
+
+
+function isShopeeOrTiktokLike(ctx){
+  const merchant = stripVietnamese(ctx.merchant || '');
+  return catMatches(ctx,['shopee','tiktok']) ||
+    merchant.includes('shopee') || merchant.includes('tiktok');
+}
+
+function isShopeeLike(ctx){
+  const merchant = stripVietnamese(ctx.merchant || '');
+  return catMatches(ctx,['shopee']) || merchant.includes('shopee');
+}
+
+function cakeIsExcluded(obj){
+  const mcc = String(obj.mcc || '').trim();
+  const cat = effectiveCategory({...obj, mccCat: obj.mccCat || inferMccCat(mcc), merchantCat: obj.merchantCat || inferMerchantCat(obj.merchant || '')});
+  return ['4900','4111','5541'].includes(mcc) || ['utilities','passenger_transport','fuel','telecom'].includes(cat);
+}
+
+function cakeEligibleSpend(cardId, ctx){
+  const hist = getCardHistoryExpenses(cardId, ctx.txDate || val('date'));
+  let eligible = hist.filter(e=>!cakeIsExcluded(e)).reduce((s,e)=>s+(Number(e.amount)||0),0) + (ctx.manualSpend || 0);
+  if(ctx.spendMode === 'after' && !cakeIsExcluded(ctx)) eligible += ctx.amount;
+  if(ctx.spendMode === 'optimistic') eligible = 999999999;
+  return eligible;
+}
+
+function cakeSmartTxnAdvice(amount, reward){
+  const useful = amount >= 200000 ? 250000 : 50000;
+  if(amount > useful){
+    return `<div class="thresholdAlert" style="color:#b7791f">
+      <div><b>Gợi ý Cake:</b> giao dịch ${fmt(amount)} chỉ nhận tối đa ${fmt(reward)} do trần theo giao dịch.</div>
+      <div><b>Với Cake 20%, phần chi tối ưu trên 1 giao dịch là khoảng:</b> ${fmt(useful)}</div>
+      <div><b>Phần vượt không tăng hoàn Cake:</b> ${fmt(amount-useful)}</div>
+    </div>`;
+  }
+  return '';
+}
+
+function smartSpendAdvice(label, amount, rate, remainingCap){
+  if(!rate || remainingCap === null || remainingCap === undefined) return '';
+  const usefulSpend = Math.floor(remainingCap / rate);
+  if(usefulSpend <= 0){
+    return `<div class="thresholdAlert" style="color:#b91c1c">
+      <div><b>Gợi ý chi tiêu thông minh:</b> Không nên dùng thêm cho nhóm này vì đã hết trần hoàn.</div>
+      <div><b>Phần nên chuyển sang thẻ/nhóm khác:</b> ${fmt(amount)}</div>
+    </div>`;
+  }
+  if(amount > usefulSpend){
+    return `<div class="thresholdAlert" style="color:#b7791f">
+      <div><b>Gợi ý chi tiêu thông minh:</b> Với ${label}, chỉ nên dùng khoảng <b>${fmt(usefulSpend)}</b> để ăn đủ phần hoàn còn lại.</div>
+      <div><b>Số tiền hóa đơn:</b> ${fmt(amount)}</div>
+      <div><b>Phần nên tách/chuyển sang thẻ khác:</b> ${fmt(amount - usefulSpend)}</div>
+    </div>`;
+  }
+  return `<div class="thresholdAlert" style="color:#12805c">
+    <div><b>Gợi ý chi tiêu thông minh:</b> Hóa đơn này vẫn nằm trong phần còn trần của ${label}.</div>
+    <div><b>Có thể dùng tối đa thêm khoảng:</b> ${fmt(usefulSpend - amount)} sau giao dịch này trước khi full trần nhóm.</div>
+  </div>`;
+}
+
+function capText(raw, cap){
+  if(cap && raw >= cap){
+    return `
+      <div class="thresholdAlert" style="color:#b91c1c">
+        <div><b>Giao dịch này đã chạm hạn mức hoàn.</b></div>
+        <div><b>Trần hoàn:</b> ${fmt(cap)}</div>
+        <div><b>Hoàn theo tỷ lệ trước trần:</b> ${fmt(raw)}</div>
+        <div><b>Ước tính nhận thực tế:</b> ${fmt(cap)}</div>
+      </div>`;
+  }
+  if(cap){
+    return `
+      <div class="thresholdAlert" style="color:#12805c">
+        <div><b>Chưa full trần theo giao dịch này.</b></div>
+        <div><b>Trần hoàn:</b> ${fmt(cap)}</div>
+        <div><b>Hoàn theo tỷ lệ:</b> ${fmt(raw)}</div>
+      </div>`;
+  }
+  return '';
+}
+
+function labelCategory(cat){
+  const map = {
+    online:'giao dịch trực tuyến',
+    ecommerce:'mua sắm online',
+    shopee:'giao dịch trực tuyến / Shopee',
+    shopeefood:'ShopeeFood / ẩm thực online',
+    lazada:'mua sắm online / Lazada',
+    tiktok:'mua sắm online / TikTok Shop',
+    dining:'ẩm thực',
+    supermarket:'siêu thị',
+    fashion:'thời trang / mua sắm',
+    travel:'du lịch',
+    airline:'vé máy bay',
+    vietjet:'Vietjet',
+    transport:'di chuyển',
+    entertainment:'giải trí',
+    education:'giáo dục',
+    insurance:'bảo hiểm',
+    health:'sức khỏe',
+    museum:'bảo tàng / di tích',
+    utilities:'điện / nước / hóa đơn tiện ích',
+    telecom:'viễn thông / Internet',
+    fuel:'xăng dầu',
+    passenger_transport:'vận tải hành khách',
+    life:'đầu tư cuộc sống',
+    foreign:'giao dịch nước ngoài',
+    wallet:'Apple Pay/Samsung Pay/Google Pay/Garmin Pay',
+    shopping:'mua sắm'
+  };
+  return map[cat] || cat || 'phù hợp';
+}
+
+function merchantIncludes(ctx, names){ return names.some(n=>ctx.merchant.includes(n.toLowerCase())); }
+function capReward(amount, rate, cap){ return Math.min(amount*rate, cap); }
+function maybeForeignFee(ctx, feeRate){ return ctx.foreign ? ctx.amount*feeRate : 0; }
+function thresholdAdviceBox({threshold, spend, gap, potentialReward, actualReward=0, label='DSCT', reason='', currentTxnForThreshold=0}){
+  const txnPart = Math.max(0, Number(currentTxnForThreshold) || 0);
+  const beforeSpend = Math.max(0, spend - txnPart);
+  const neededBeforeTxn = Math.max(0, threshold - beforeSpend);
+  const txnCanOpen = txnPart > 0 && neededBeforeTxn > 0 && txnPart >= neededBeforeTxn;
+  const surplusIfUseTxn = txnCanOpen ? Math.max(0, txnPart - neededBeforeTxn) : 0;
+  const stillNeedAfterTxn = Math.max(0, threshold - spend);
+  const mainAdvice = txnCanOpen
+    ? `Nếu dùng hóa đơn này để chạy ${label}, chỉ cần khoảng ${fmt(neededBeforeTxn)} trên thẻ này để đủ mốc; phần dư ${fmt(surplusIfUseTxn)} nên cân nhắc chuyển sang thẻ khác nếu có hoàn tốt hơn.`
+    : `Sau giao dịch này vẫn còn thiếu ${fmt(stillNeedAfterTxn)} để mở điều kiện ${label}.`;
+  return `<div class="thresholdAlert" style="color:#b7791f">
+    <div><b>Chưa đủ điều kiện ${label}.</b></div>
+    <div><b>${label} trước giao dịch này:</b> ${fmt(beforeSpend)}</div>
+    ${txnPart ? `<div><b>Giao dịch này cộng vào ${label}:</b> ${fmt(txnPart)}</div>` : ''}
+    <div><b>${label} sau khi tính giao dịch này:</b> ${fmt(spend)}</div>
+    <div><b>Mốc cần đạt:</b> ${fmt(threshold)}</div>
+    <div><b>Còn thiếu sau giao dịch này:</b> ${fmt(stillNeedAfterTxn)}</div>
+    ${txnCanOpen ? `<div><b>Phần tiền vượt mốc nếu dùng hết hóa đơn này:</b> ${fmt(surplusIfUseTxn)}</div>` : ''}
+    <div><b>Lời khuyên:</b> ${mainAdvice}</div>
+    ${reason ? `<div><b>Ghi chú:</b> ${reason}</div>` : ''}
+  </div>`;
+}
+
+
+function thresholdRunContextForCard(card, ctx, genericSpend){
+  if(ctx.spendMode !== 'after') return null;
+  const amt = ctx.amount || 0;
+  const cat = ctx.category || ctx.mccCat || '';
+  switch(card.id){
+    case 'vp_stepup':
+      if(catMatches(ctx,['online','ecommerce','shopee','lazada','tiktok','shopeefood','dining'])) return {threshold:10000000, spend:genericSpend, txnPart:amt, label:'DSCT'};
+      return null;
+    case 'cake':
+      return {threshold:5000000, spend:cakeEligibleSpend(card.id, ctx), txnPart:!cakeIsExcluded(ctx) ? amt : 0, label:'DSCT hợp lệ'};
+    case 'msb_online':
+      if(catMatches(ctx,['online','ecommerce','shopee','lazada','tiktok','entertainment'])) return {threshold:3000000, spend:genericSpend, txnPart:amt, label:'DSCT'};
+      return null;
+    case 'cimb_revi':
+      if(isShopeeOrTiktokLike(ctx)) return {threshold:3000000, spend:genericSpend, txnPart:amt, label:'DSCT'};
+      return null;
+    case 'vp_srewards': {
+      const info = vpSRewardsEligibleSpend(card.id, ctx, genericSpend);
+      return {threshold:5000000, spend:info.eligible, txnPart:info.currentExcluded ? 0 : amt, label:'DSCT hợp lệ'};
+    }
+    case 'bvb_lifestyle':
+      return {threshold:3000000, spend:genericSpend, txnPart:amt, label:'DSCT'};
+    case 'shinhan_hi':
+      if(catMatches(ctx,['shopee','transport','dining','supermarket','online'])) return {threshold:3000000, spend:genericSpend, txnPart:amt, label:'DSCT'};
+      return null;
+    case 'mb_priority_sig':
+      return {threshold:10000000, spend:genericSpend, txnPart:amt, label:'DSCT'};
+    case 'ocb_igen':
+      if(isShopeeOrTiktokLike(ctx) || ctx.channel === 'wallet') return {threshold:5000000, spend:genericSpend, txnPart:amt, label:'DSCT'};
+      return null;
+    default:
+      return null;
+  }
+}
+
+function evaluate(card, ctx){
+  let reward=0, note=[], status='ok';
+  let thresholdGap=0, thresholdAmount=0, thresholdSpend=0, thresholdPreSpend=0, thresholdTxnApplied=0, thresholdNeededBeforeTxn=0, thresholdSurplusIfUseTxn=0, potentialReward=null, thresholdLabel='DSCT';
+  function markThresholdNeed(threshold, currentSpend, projectedReward, label='DSCT', reason='', currentTxnForThreshold=null){
+    const txnPart = currentTxnForThreshold === null ? (ctx.spendMode === 'after' ? amt : 0) : Math.max(0, Number(currentTxnForThreshold) || 0);
+    thresholdAmount = threshold;
+    thresholdSpend = currentSpend;
+    thresholdTxnApplied = txnPart;
+    thresholdPreSpend = Math.max(0, currentSpend - txnPart);
+    thresholdNeededBeforeTxn = Math.max(0, threshold - thresholdPreSpend);
+    thresholdSurplusIfUseTxn = (txnPart > 0 && thresholdNeededBeforeTxn > 0 && txnPart >= thresholdNeededBeforeTxn) ? Math.max(0, txnPart - thresholdNeededBeforeTxn) : 0;
+    thresholdGap = Math.max(0, threshold - currentSpend);
+    potentialReward = Math.max(0, Number(projectedReward) || 0);
+    thresholdLabel = label;
+    note.push(thresholdAdviceBox({threshold, spend:currentSpend, gap:thresholdGap, potentialReward, actualReward:reward, label, reason, currentTxnForThreshold:txnPart}));
+  }
+  const amt=ctx.amount;
+  const historySpend = getCardHistorySpend(card.id, ctx.txDate || val('date'));
+  let spend = historySpend + (ctx.manualSpend || 0);
+  if(ctx.spendMode === 'after') spend += amt;
+  if(ctx.spendMode === 'optimistic') spend = 999999999;
+  if(historySpend > 0 || (ctx.manualSpend || 0) > 0){
+    note.push(`Lịch sử đã lưu của thẻ này trong tháng: ${fmt(historySpend)}${(ctx.manualSpend||0)>0 ? ' + DSCT thủ công ' + fmt(ctx.manualSpend) : ''}.`);
+  }
+  switch(card.id){
+    case 'vp_stepup':
+      if(catMatches(ctx,['online','ecommerce','shopee','lazada','tiktok','shopeefood'])){
+        const projected = capReward(amt,.15,700000);
+        if(spend>=10000000){ reward=projected; note.push('Online 15%, ước tính trần 700k/kỳ nếu DSCT ≥10tr.'); }
+        else { reward=amt*.001; status='warn'; note.push('Hiện chỉ tính mức nền 0.1% vì chưa đạt DSCT 10tr.'); markThresholdNeed(10000000, spend, projected, 'DSCT', 'VPBank StepUP muốn ăn online 15% phải đạt DSCT 10tr/kỳ.'); }
+      }
+      else if(catMatches(ctx,['dining'])){
+        const projected = capReward(amt,.04,200000);
+        if(spend>=10000000){ reward=projected; note.push('Ăn uống 4%, trần 200k/kỳ.'); }
+        else { reward=amt*.001; status='warn'; note.push('Hiện chỉ tính mức nền 0.1% vì chưa đạt DSCT 10tr.'); markThresholdNeed(10000000, spend, projected, 'DSCT', 'VPBank StepUP muốn ăn uống 4% phải đạt DSCT 10tr/kỳ.'); }
+      }
+      else {reward=amt*.001; note.push('Chỉ tính mức nền 0.1% hoặc không thuộc nhóm ưu đãi.');}
+      break;
+    case 'cake': {
+      // Cake Freedom 2in1: 3 nhóm cố định + chọn 2/9 nhóm linh hoạt.
+      const fixed = ['ecommerce','shopee','lazada','tiktok','travel','fashion'];
+      const flexEligible = ['supermarket','dining','transport','convenience','insurance','hotel','professional_ewallet','airline','cinema'];
+      const cakeDsct = cakeEligibleSpend(card.id, ctx);
+
+      if(cakeIsExcluded(ctx)){
+        reward = 0;
+        status = 'warn';
+        note.push('Cake: giao dịch này thuộc MCC loại trừ khỏi tổng chi tiêu hợp lệ/hoàn tiền, ví dụ 4900 tiện ích, 4111 vận tải hành khách, 5541 xăng dầu.');
+      }
+      else if(catMatches(ctx,[...fixed,...flexEligible,'online'])){
+        const perTxnCap = amt>=200000 ? 50000 : 10000;
+        reward = Math.min(amt*.20, perTxnCap);
+        const isFixed = catMatches(ctx,fixed) || (ctx.category === 'online' && /shopee|lazada|tiktok/i.test(ctx.merchant || ''));
+        const chosenCat = ctx.mccCat || ctx.category;
+        const groupNote = isFixed
+          ? 'Nhóm cố định Cake 20%: TMĐT / đại lý du lịch-tour / thời trang.'
+          : `Nhóm linh hoạt Cake 20%: nhớ chọn “${labelCategory(chosenCat)}” làm 1 trong 2 danh mục linh hoạt.`;
+        if(cakeDsct < 5000000){
+          status='warn';
+          const projected = reward;
+          reward = 0;
+          note.push(`${groupNote} Cake cần DSCT hợp lệ 5tr/kỳ mới được hoàn. ${dsctText(ctx,historySpend,cakeDsct)} Khi đủ mốc, giao dịch này ước tính hoàn ${fmt(projected)}. ${capText(amt*.20, perTxnCap)} ${cakeSmartTxnAdvice(amt,projected)}`);
+          markThresholdNeed(5000000, cakeDsct, projected, 'DSCT hợp lệ', 'Cake chỉ trả hoàn khi DSCT hợp lệ trong kỳ đạt 5tr.', (ctx.spendMode === 'after' && !cakeIsExcluded(ctx)) ? amt : 0);
+        } else {
+          if(!isFixed) status='warn';
+          note.push(`${groupNote} Đã đạt DSCT hợp lệ 5tr/kỳ. Giao dịch này ước tính hoàn ${fmt(reward)}. Trần 50k/GD nếu từ 200k, 10k/GD nếu dưới 200k; trần 200k/danh mục/kỳ, 1tr/kỳ. ${capText(amt*.20, perTxnCap)} ${cakeSmartTxnAdvice(amt,reward)}`);
+        }
+      }
+      else {
+        reward = 0;
+        note.push('Không thuộc 3 nhóm cố định hoặc 9 nhóm linh hoạt của Cake. Nếu đây là TMĐT, hãy chọn nhóm “TMĐT / sàn online” hoặc nhập merchant như Shopee/Lazada/TikTok để app nhận diện.');
+      }
+      break;
+    }
+    case 'msb_mdigi':
+      if(catMatches(ctx,['dining','travel','entertainment'])){
+        reward=capReward(amt,.20,300000);
+        status='warn';
+        note.push(`mDigi có thể hoàn 20%, trần 300k/kỳ. Nhớ chọn danh mục ${labelCategory(ctx.category || ctx.mccCat)} cho kỳ sao kê.`);
+      }
+      else note.push('mDigi chỉ mạnh khi chọn đúng 1 trong 3 nhóm: ăn uống, du lịch/khách sạn, sản phẩm số/giải trí số.');
+      break;
+    case 'msb_online':
+      if(catMatches(ctx,['online','ecommerce','shopee','lazada','tiktok','entertainment'])){
+        const capInfo = capRewardWithHistory(card.id, ctx, ['online','ecommerce','shopee','lazada','tiktok','entertainment'], .10, 300000);
+        reward = capInfo.reward;
+        if(spend>=3000000){
+          note.push(`Online 10%, đã đạt DSCT ≥3tr/kỳ, trần 300k. ${capTextWithHistory(capInfo)}`);
+        } else {
+          status='warn';
+          const projected = reward;
+          reward = 0;
+          note.push(`Online 10% nhưng cần DSCT ≥3tr/kỳ. ${dsctText(ctx,historySpend,spend)} Khi đủ mốc, giao dịch này ước tính hoàn ${fmt(projected)}. ${capTextWithHistory(capInfo)}`);
+          markThresholdNeed(3000000, spend, projected, 'DSCT', 'MSB Visa Online chỉ nên dùng khi đủ mốc; nếu trần đã hết thì chuyển sang thẻ khác cho hóa đơn hiện tại.');
+        }
+      }
+      else {status='warn'; note.push('MSB Visa Online cần giao dịch online hợp lệ.');}
+      break;
+    case 'vp_debit_prime':
+      if(ctx.channel==='contactless'){reward=capReward(amt,.03,400000); note.push('Contactless POS 3%, trần chung online/contactless 400k/tháng.');}
+      else if(isRewardableOnline(ctx)){reward=capReward(amt,.01,400000); note.push('Online 1%, trần chung 400k/tháng.');}
+      else {reward=amt*.003; note.push('Giao dịch khác 0.3% không giới hạn.');}
+      break;
+    case 'sacombank_uniq':
+      if(catMatches(ctx,['supermarket','transport'])){reward=capReward(amt,.20,300000); note.push('Siêu thị/di chuyển 20%, chưa tính ưu đãi 50% giao dịch đầu trong 30 ngày.');}
+      else {reward=capReward(amt,.005,300000); note.push('Chi tiêu khác 0.5%.');}
+      break;
+    case 'sc_simplycash':
+      reward = amt*(ctx.foreign?.01:.005) - maybeForeignFee(ctx,.0249);
+      note.push(ctx.foreign?'Ngoại tệ 1% nhưng trừ phí ngoại tệ 2.49%.':'Nội địa 0.5%, không trần.');
+      break;
+    case 'tcb_debit_platinum':
+      if(catMatches(ctx,['supermarket','entertainment','dining'])){reward=capReward(amt,.02,200000); note.push('Tạm tính U-Point 2%; Inspire có thể cao hơn.');}
+      else note.push('Không thuộc nhóm U-Point mạnh.');
+      break;
+    case 'tcb_everyday':
+      if(isRewardableOnline(ctx) && amt>=200000){let rate=ctx.foreign?.08:.05; if(spend>=15000000) rate*=2; reward=capReward(amt,rate,spend>=30000000?700000:500000); note.push(`Online ${Math.round(rate*100)}%, giao dịch từ 200k; có thưởng thêm nếu DSCT ≥15tr.`);}
+      else note.push(blocksGenericOnline(ctx) ? `Merchant này được nhận diện là ${labelCategory(ctx.effectiveCat)}, không tính là online chung.` : 'Cần giao dịch online từ 200k.');
+      break;
+    case 'woori_z':
+      if(isRewardableOnline(ctx) || catMatches(ctx,['online','ecommerce','shopee','lazada','tiktok'])){reward=capReward(amt,.02,500000); note.push('Online 2% Wcard-Point, trần 500k điểm/tháng.');}
+      else note.push('Chủ yếu mạnh cho online.');
+      break;
+    case 'mb_jcb_shopeefood':
+      if(catMatches(ctx,['shopeefood'])){reward=Math.min(amt*.5,80000); note.push('Ước tính voucher ShopeeFood/campaign; cần kiểm tra còn lượt trong App MB.'); status='warn';}
+      else note.push('Chỉ nên xét khi có voucher/campaign ShopeeFood/JCB.');
+      break;
+    case 'acb_platinum': {
+      const acbGroup = acbPlatinumGroup(ctx);
+      const groupLabel = acbGroup === 'dining' ? 'ăn uống' : acbGroup === 'online' ? 'mua sắm online' : acbGroup === 'wallet' ? 'Apple Pay/Samsung Pay/Google Pay/Garmin Pay' : '';
+      if(acbGroup){
+        const used = historicalAcbPlatinumUsed(card.id, ctx.txDate || val('date'), acbGroup);
+        const remaining = Math.max(0, 100000 - used);
+        const rawCurrent = amt * 0.05;
+        reward = Math.min(rawCurrent, remaining);
+        if(remaining <= 0){
+          status = 'warn';
+          note.push(`<div class="thresholdAlert" style="color:#b91c1c">
+            <div><b>Đã hết hạn mức hoàn ACB Visa Platinum nhóm ${groupLabel}.</b></div>
+            <div><b>Trần nhóm:</b> 100.000 điểm/tháng</div>
+            <div><b>Đã dùng từ lịch sử:</b> ${fmt(used)}</div>
+            <div><b>Giao dịch này:</b> không còn trần 5% để cộng thêm.</div>
+          </div>` + smartSpendAdvice(`ACB Visa Platinum nhóm ${groupLabel} 5%`, amt, .05, remaining));
+        } else if(rawCurrent >= remaining){
+          status = 'warn';
+          note.push(`<div class="thresholdAlert" style="color:#b91c1c">
+            <div><b>Sau giao dịch này sẽ hết hạn mức hoàn ACB Visa Platinum.</b></div>
+            <div><b>Nhóm:</b> ${groupLabel}</div>
+            <div><b>Trần nhóm:</b> 100.000 điểm/tháng</div>
+            <div><b>Đã dùng từ lịch sử:</b> ${fmt(used)}</div>
+            <div><b>Còn trần trước giao dịch:</b> ${fmt(remaining)}</div>
+            <div><b>Giao dịch này chỉ nhận tối đa:</b> ${fmt(reward)}</div>
+            <div><b>Còn trần sau giao dịch:</b> 0đ</div>
+          </div>` + smartSpendAdvice(`ACB Visa Platinum nhóm ${groupLabel} 5%`, amt, .05, remaining));
+        } else {
+          note.push(`<div class="thresholdAlert" style="color:#12805c">
+            <div><b>ACB Visa Platinum nhóm ${groupLabel}: 5%</b></div>
+            <div><b>Trần nhóm:</b> 100.000 điểm/tháng</div>
+            <div><b>Đã dùng từ lịch sử:</b> ${fmt(used)}</div>
+            <div><b>Ước tính giao dịch này:</b> ${fmt(reward)}</div>
+            <div><b>Còn trần sau giao dịch:</b> ${fmt(Math.max(0, remaining-reward))}</div>
+          </div>` + smartSpendAdvice(`ACB Visa Platinum nhóm ${groupLabel} 5%`, amt, .05, remaining));
+        }
+      } else {
+        note.push('ACB Visa Platinum chỉ mạnh cho ăn uống, mua sắm online, hoặc thanh toán qua Apple Pay/Samsung Pay/Google Pay/Garmin Pay. Lưu ý: đây là mobile wallet/tokenized card payment, không phải ví điện tử nạp tiền/chuyển tiền.');
+      }
+      break;
+    }
+    case 'uob_lazada':
+      if(catMatches(ctx,['lazada'])){reward=Math.min(amt*.10,400000); note.push('Tạm quy đổi 10X như ~10%, chỉ tính ưu đãi Lazada tới 4tr chi tiêu/tháng; voucher cuối tuần nếu còn.');}
+      else if(catMatches(ctx,['fashion','travel'])){reward=Math.min(amt*.05,1000000); note.push('5X thời trang/du lịch tới 20tr chi tiêu/tháng.');}
+      else {reward=amt*.01; note.push('Giao dịch khác 1X.');}
+      break;
+    case 'cimb_revi':
+      if(catMatches(ctx,['online','transport','supermarket','ecommerce','shopee','lazada','tiktok','travel','airline','entertainment'])){
+        reward=capReward(amt,.20,100000);
+        if(spend>=3000000){ note.push(`CIMB REVI có thể hoàn 20% cho nhóm TMĐT/online như Shopee nếu đúng MCC/ngành hàng, trần 100k/danh mục/tháng; tổng 500k/tháng. ${capText(amt*.20,100000)}`); }
+        else { const projected = reward; reward = 0; status='warn'; note.push(`CIMB REVI có thể hoàn 20% cho Shopee/TMĐT/online nhưng cần DSCT ≥3tr. ${dsctText(ctx,historySpend,spend)} Khi đủ mốc, giao dịch này ước tính hoàn ${fmt(projected)}. ${capText(amt*.20,100000)}`); markThresholdNeed(3000000, spend, projected, 'DSCT', 'CIMB REVI cần đạt DSCT 3tr để mở hoàn 20%.'); }
+      }
+      else {status='warn'; note.push('CIMB REVI chỉ hiện hoàn khi giao dịch thuộc nhóm ưu đãi như Shopee/TMĐT, siêu thị, di chuyển, du lịch, hàng không, giải trí.');}
+      break;
+    case 'vp_srewards': {
+      const vpDsct = vpSRewardsEligibleSpend(card.id, ctx, historySpend);
+      const eligibleSpend = vpDsct.eligible;
+      if(vpDsct.currentExcluded){
+        reward = 0;
+        status = 'warn';
+        note.push('S Rewards: giao dịch này thuộc nhóm không được tính tích xu/DSCT theo thể lệ, ví dụ xăng dầu, điện nước, viễn thông, VPBank NEO, ATM hoặc giao dịch loại trừ.');
+      }
+      else if(catMatches(ctx,['shopee','shopeefood'])){
+        const capInfo = capRewardWithHistory(card.id, ctx, ['shopee','shopeefood'], .12, 400000);
+        reward = capInfo.reward;
+        if(eligibleSpend>=5000000){
+          note.push(`Đủ DSCT hợp lệ ≥5tr/kỳ: Shopee + ShopeeFood 12% Shopee Xu, chung trần 400k xu/kỳ sao kê. ${capTextWithHistory(capInfo)}`);
+        } else {
+          status='warn';
+          const projected = reward;
+          reward = 0;
+          note.push(`S Rewards Shopee/ShopeeFood có thể 12% nhưng cần DSCT hợp lệ ≥5tr/kỳ. ${vpSRewardsDsctText(ctx,eligibleSpend)} Khi đủ mốc, giao dịch này ước tính ${fmt(projected)} xu. ${capTextWithHistory(capInfo)}`);
+          markThresholdNeed(5000000, eligibleSpend, projected, 'DSCT hợp lệ', 'S Rewards chỉ tính DSCT hợp lệ sau khi loại trừ xăng dầu, tiện ích, viễn thông, ATM, VPBank NEO và giao dịch loại trừ.', currentExcluded ? 0 : amt);
+        }
+      }
+      else if(catMatches(ctx,['dining','supermarket','transport'])){
+        const capInfo = capRewardWithHistory(card.id, ctx, ['dining','supermarket','transport'], .04, 200000);
+        reward = capInfo.reward;
+        if(eligibleSpend>=5000000){
+          note.push(`Đủ DSCT hợp lệ ≥5tr/kỳ: siêu thị/ăn uống/di chuyển 4% Shopee Xu, chung trần 200k xu/kỳ sao kê. ${capTextWithHistory(capInfo)}`);
+        } else {
+          status='warn';
+          const projected = reward;
+          reward = 0;
+          note.push(`S Rewards nhóm siêu thị/ăn uống/di chuyển có thể 4% nhưng cần DSCT hợp lệ ≥5tr/kỳ. ${vpSRewardsDsctText(ctx,eligibleSpend)} Khi đủ mốc, giao dịch này ước tính ${fmt(projected)} xu. ${capTextWithHistory(capInfo)}`);
+          markThresholdNeed(5000000, eligibleSpend, projected, 'DSCT hợp lệ', 'S Rewards chỉ tính DSCT hợp lệ sau khi loại trừ các nhóm không hợp lệ.', currentExcluded ? 0 : amt);
+        }
+      }
+      else {
+        reward = eligibleSpend>=5000000 ? amt*.001 : 0;
+        status = eligibleSpend>=5000000 ? 'ok' : 'warn';
+        note.push(eligibleSpend>=5000000
+          ? 'S Rewards: giao dịch còn lại 0,1% xu, không giới hạn trần theo thể lệ.'
+          : `S Rewards giao dịch khác cần DSCT hợp lệ ≥5tr/kỳ mới tính 0,1% xu. ${vpSRewardsDsctText(ctx,eligibleSpend)} ${gapText(eligibleSpend,5000000)}`);
+      }
+      break;
+    }
+    case 'ncb_tuhao':
+      if(catMatches(ctx,['museum']) || ctx.mcc==='7991'){reward=capReward(amt,1,200000); note.push('MCC 7991 hoàn 100%, trần 200k/tháng.');}
+      else {reward=Math.floor(amt/1000000)*3000; note.push('Giao dịch thường: 3k/1tr vào ví từ thiện.');}
+      break;
+    case 'bvb_lifestyle':
+      if(spend<3000000){
+        status='warn';
+        if(merchantIncludes(ctx,['chatgpt','netflix','vieon'])){
+          reward=capReward(amt,.50,50000);
+          const projected = reward;
+          reward = 0;
+          note.push(`BVBank Lifestyle có thể 50% cho ChatGPT/Netflix/VieON nhưng cần DSCT ≥3tr/tháng. Khi đủ mốc, giao dịch này ước tính ${fmt(projected)}.`);
+          markThresholdNeed(3000000, spend, projected, 'DSCT', 'BVBank Lifestyle cần đạt DSCT 3tr/tháng để mở hoàn.');
+        } else if(catMatches(ctx,['dining','fashion','travel'])){
+          const chosen = ctx.mccCat || ctx.category;
+          let rate = chosen==='fashion'?.05:chosen==='travel'?.03:.01;
+          reward=capReward(amt,rate,200000);
+          const projected = reward;
+          reward = 0;
+          note.push(`BVBank Lifestyle có thể ${Math.round(rate*100)}% ở mốc dưới 15tr nhưng cần DSCT ≥3tr/tháng. ${dsctText(ctx,historySpend,spend)} Nhớ chọn danh mục ${labelCategory(chosen)}. ${capText(amt*rate,200000)}`);
+          markThresholdNeed(3000000, spend, projected, 'DSCT', 'BVBank Lifestyle cần đạt DSCT 3tr/tháng và chọn đúng danh mục.');
+        } else { note.push(`BVBank Lifestyle cần DSCT hợp lệ từ 3tr/tháng. ${dsctText(ctx,historySpend,spend)}`); markThresholdNeed(3000000, spend, 0, 'DSCT', 'Giao dịch này không thuộc nhóm hoàn nổi bật của BVBank Lifestyle, nhưng vẫn có thể cần thêm chi tiêu để mở điều kiện cho các nhóm khác.'); }
+      }
+      else if(merchantIncludes(ctx,['chatgpt','netflix','vieon'])){reward=capReward(amt,.50,50000); note.push(`ChatGPT/Netflix/VieON 50%, trần 50k/merchant/tháng. ${capText(amt*.50,50000)}`);}
+      else if(catMatches(ctx,['dining','fashion','travel'])){
+        const chosen = ctx.mccCat || ctx.category;
+        let rate = spend>=50000000 ? (chosen==='fashion'?.20:chosen==='travel'?.10:.05) : spend>=15000000 ? (chosen==='fashion'?.10:chosen==='travel'?.05:.03) : (chosen==='fashion'?.05:chosen==='travel'?.03:.01);
+        let cap = spend>=50000000?800000:spend>=15000000?400000:200000;
+        reward=capReward(amt,rate,cap);
+        status='warn';
+        note.push(`BVBank Lifestyle có thể ${Math.round(rate*100)}%, trần ${fmt(cap)}. Nhớ chọn danh mục ${labelCategory(chosen)} trong tháng. ${capText(amt*rate,cap)}`);
+      } else note.push('BVBank Lifestyle chỉ mạnh cho ChatGPT/Netflix/VieON hoặc nhóm tự chọn ẩm thực/thời trang/du lịch.');
+      break;
+    case 'bvb_jcb_sense':
+      if(merchantIncludes(ctx,['uniqlo']) && amt>=1000000){reward=50000; note.push('Uniqlo hóa đơn từ 1tr: 50k điểm/lần/tháng.');}
+      else if(catMatches(ctx,['fashion','dining'])){let rate=spend>=50000000?.20:spend>=15000000?.10:.05; let cap=spend>=50000000?1500000:spend>=15000000?600000:300000; reward=capReward(amt,rate,cap); note.push(`Thời trang/ăn uống ${Math.round(rate*100)}%, trần ${fmt(cap)}.`);}
+      else note.push('Mạnh cho thời trang/ăn uống/Uniqlo.');
+      break;
+    case 'vib_2in1':
+      if(isRewardableOnline(ctx) || catMatches(ctx,['online','ecommerce','shopee','lazada','tiktok'])){reward=capReward(amt,ctx.foreign?.05:.03,600000); note.push(ctx.foreign?'Online nước ngoài đến 5%, trần 600k/kỳ.':'Online nội địa 3%, trần 600k/kỳ.');}
+      else {reward=amt*.001; note.push('Giao dịch khác 0.1%.');}
+      break;
+    case 'shinhan_hi':
+      if(catMatches(ctx,['shopee','transport','travel']) || merchantIncludes(ctx,['shopee','grab','agoda','vietnam airlines','nguyen kim','samsung','paris baguette','tous les jours'])){
+        if(spend>=3000000){reward=capReward(amt,.05,400000); note.push(`Đối tác Shinhan/Shopee/Grab 5%, đã đạt DSCT ≥3tr, trần 400k điểm. ${capText(amt*.05,400000)}`);}
+        else {const projected=capReward(amt,.05,400000); reward=amt*.003; status='warn'; note.push(`Shinhan Hi-Point có thể 5% nhưng cần DSCT ≥3tr. Khi đủ mốc, giao dịch này ước tính ${fmt(projected)} điểm; nếu không chỉ 0.3%.`); markThresholdNeed(3000000, spend, projected, 'DSCT', 'Nếu chưa đủ DSCT thì chỉ nên tính mức nền 0.3%, không tính 5%.');}
+      }
+      else {reward=amt*.003; note.push('Điểm chuẩn 0.3%.');}
+      break;
+    case 'hdb_vietjet':
+      if(catMatches(ctx,['vietjet']) || merchantIncludes(ctx,['vietjet'])){reward=capReward(amt,.10,500000); note.push('Vé Vietjet app/web 10%, trần 500k/tháng.');}
+      else if(['4722','5811','5812','5813','5921'].includes(ctx.mcc) || catMatches(ctx,['travel','dining'])){reward=Math.floor(capReward(amt,.10,300000)/10000)*10000; note.push('Du lịch/ẩm thực 10%, MCC 4722/5811/5812/5813/5921, trần 300k, làm tròn xuống bội 10k.');}
+      else {reward=amt*.003; note.push('Giao dịch khác 0.3%.');}
+      break;
+    case 'mb_priority_sig':
+      if(spend<10000000){
+        status='warn';
+        const cat = ctx.mccCat || ctx.category;
+        if(catMatches(ctx,['travel','dining','entertainment','education','insurance'])){let r=.10; if(ctx.birthday) r*=2; const projected=capReward(amt,r,400000); reward=0; const group=(cat==='education'||cat==='insurance')?'đầu tư cuộc sống':labelCategory(cat); note.push(`MB Priority có thể hoàn ${Math.round(r*100)}% nếu đạt DSCT 10tr/kỳ. ${dsctText(ctx,historySpend,spend)} Nhớ chọn nhóm 10% là ${group}. ${capText(amt*r,400000)}`); markThresholdNeed(10000000, spend, projected, 'DSCT', 'MB Priority Visa Signature cần DSCT 10tr/kỳ mới mở nhóm 10%/2%.');}
+        else if(catMatches(ctx,['fashion','supermarket','ecommerce','online','shopee','lazada','tiktok','transport','health'])){let r=.02; if(ctx.birthday) r*=2; const projected=capReward(amt,r,400000); reward=0; const group=catMatches(ctx,['shopee','lazada','tiktok','online','ecommerce'])?'mua sắm online':labelCategory(cat); note.push(`MB Priority có thể hoàn ${Math.round(r*100)}% nếu đạt DSCT 10tr/kỳ. ${dsctText(ctx,historySpend,spend)} Nhớ chọn nhóm 2% là ${group}. ${capText(amt*r,400000)}`); markThresholdNeed(10000000, spend, projected, 'DSCT', 'MB Priority Visa Signature cần DSCT 10tr/kỳ mới mở nhóm 10%/2%.');}
+        else { note.push(`Cần DSCT tối thiểu 10tr/kỳ sao kê. ${dsctText(ctx,historySpend,spend)}`); markThresholdNeed(10000000, spend, 0, 'DSCT', 'Giao dịch này không thuộc nhóm hoàn chính, không nên dùng chỉ để chạy DSCT nếu có thẻ khác tốt hơn.'); }
+      }
+      else {
+        const cat = ctx.mccCat || ctx.category;
+        if(catMatches(ctx,['travel','dining','entertainment','education','insurance'])){
+          let r=.10; if(ctx.birthday) r*=2; reward=capReward(amt,r,400000);
+          const group = (cat==='education'||cat==='insurance') ? 'đầu tư cuộc sống' : labelCategory(cat);
+          status='warn';
+          note.push(`MB Priority có thể hoàn ${Math.round(r*100)}%, trần nhóm 400k. Nhớ chọn nhóm 10% là ${group}. ${capText(amt*r,400000)}`);
+        }
+        else if(catMatches(ctx,['fashion','supermarket','ecommerce','online','shopee','lazada','tiktok','transport','health'])){
+          let r=.02; if(ctx.birthday) r*=2; reward=capReward(amt,r,400000);
+          const group = catMatches(ctx,['shopee','lazada','tiktok','online','ecommerce']) ? 'mua sắm online' : labelCategory(cat);
+          status='warn';
+          note.push(`MB Priority có thể hoàn ${Math.round(r*100)}%, trần nhóm 400k. Nhớ chọn nhóm 2% là ${group}. ${capText(amt*r,400000)}`);
+        }
+        else note.push('Không thuộc nhóm 10% hoặc 2% của MB Priority Visa Signature.');
+      }
+      break;
+    case 'ocb_igen': {
+      const maybeShopeeTiktok = isShopeeOrTiktokLike(ctx);
+      if(spend<5000000){
+        status='warn';
+        if(maybeShopeeTiktok){
+          const capInfo = capRewardWithHistory(card.id, ctx, ['shopee','tiktok'], .07, 350000);
+          reward=capInfo.reward || capReward(amt,.07,350000);
+          const projected = reward;
+          reward = 0;
+          note.push(`OCB iGen có thể hoàn 7% nếu giao dịch là Shopee/TikTok nhưng cần DSCT ≥5tr/tháng. ${dsctText(ctx,historySpend,spend)} Khi đủ mốc, giao dịch này ước tính hoàn ${fmt(projected)}. Nếu đây chỉ là online chung không phải Shopee/TikTok thì không áp dụng nhóm này. ${capTextWithHistory(capInfo)}`);
+          markThresholdNeed(5000000, spend, projected, 'DSCT', 'OCB iGen cần DSCT 5tr/tháng để mở hoàn Shopee/TikTok.');
+        } else if(ctx.channel==='wallet'){
+          const capInfo = capRewardWithHistory(card.id, ctx, ['wallet'], .03, 150000);
+          reward=capInfo.reward || capReward(amt,.03,150000);
+          const projected = reward;
+          reward = 0;
+          note.push(`OCB iGen có thể hoàn 3% Apple/Google Pay nhưng cần DSCT ≥5tr/tháng. ${dsctText(ctx,historySpend,spend)} Khi đủ mốc, giao dịch này ước tính hoàn ${fmt(projected)}. ${capTextWithHistory(capInfo)}`);
+          markThresholdNeed(5000000, spend, projected, 'DSCT', 'OCB iGen cần DSCT 5tr/tháng để mở hoàn Apple/Google Pay.');
+        } else { note.push(`OCB iGen mạnh cho Shopee/TikTok hoặc Apple/Google Pay. ${dsctText(ctx,historySpend,spend)}`); markThresholdNeed(5000000, spend, 0, 'DSCT', 'Giao dịch này không khớp nhóm hoàn chính, không nên dùng chỉ để chạy DSCT nếu có thẻ khác tốt hơn.'); }
+      }
+      else if(maybeShopeeTiktok){
+        let rate=spend>=30000000?.12:.07; let cap=spend>=30000000?700000:350000;
+        const capInfo = capRewardWithHistory(card.id, ctx, ['shopee','tiktok'], rate, cap);
+        reward=capInfo.reward || capReward(amt,rate,cap);
+        let up = spend<30000000 ? ` Nếu ráng đạt 30tr/tháng thì lên 12%, còn thiếu ${fmt(30000000-spend)}.` : '';
+        note.push(`OCB iGen Shopee/TikTok ${Math.round(rate*100)}, trần ${fmt(cap)}.${up} Nếu đây chỉ là online chung không phải Shopee/TikTok thì không áp dụng nhóm này. ${capTextWithHistory(capInfo)}`);
+      }
+      else if(ctx.channel==='wallet'){let cap=spend>=30000000?300000:150000; const capInfo = capRewardWithHistory(card.id, ctx, ['wallet'], .03, cap); reward=capInfo.reward || capReward(amt,.03,cap); note.push(`Apple/Google Pay 3%, trần ${fmt(cap)}. ${capTextWithHistory(capInfo)}`);}
+      else note.push('OCB iGen mạnh cho Shopee/TikTok hoặc Apple/Google Pay.');
+      break;
+    }
+    case 'vib_supercard': {
+      const isShopping = catMatches(ctx,['fashion','supermarket','ecommerce','shopee','lazada','tiktok']);
+      const isTravel = catMatches(ctx,['travel','airline','vietjet']);
+      const isDining = catMatches(ctx,['dining','shopeefood']);
+      const isOnline = isRewardableOnline(ctx) || catMatches(ctx,['online','ecommerce','shopee','lazada','tiktok','shopeefood']);
+      const isForeign = ctx.foreign;
+      let rate = .001, pick = '';
+      if(isForeign){ rate = .15; pick = 'Giao dịch nước ngoài 15%'; }
+      else if(isDining){ rate = .10; pick = 'Ẩm thực 10%'; }
+      else if(isTravel){ rate = .10; pick = 'Du lịch 10%'; }
+      else if(isShopping){ rate = .10; pick = 'Mua sắm 10%'; }
+      else if(isOnline){ rate = .05; pick = 'Giao dịch trực tuyến 5%'; }
+      let capInfo = null;
+      if(rate !== .001){
+        const cats = pick.includes('Mua sắm') ? ['fashion','supermarket','ecommerce','shopee','lazada','tiktok'] :
+          pick.includes('Ẩm thực') ? ['dining','shopeefood'] :
+          pick.includes('Du lịch') ? ['travel','airline','vietjet'] :
+          pick.includes('trực tuyến') ? ['online','ecommerce','shopee','lazada','tiktok','shopeefood'] :
+          pick.includes('nước ngoài') ? ['foreign'] : [];
+        capInfo = capRewardWithHistory(card.id, ctx, cats, rate, 500000);
+      }
+      reward = rate === .001 ? amt*.001 : capInfo.reward;
+      if(rate === .001){
+        note.push('Không thuộc nhóm ưu đãi mới của Super Card, tính 0.1% giao dịch khác.');
+      } else {
+        status='warn';
+        note.push(`VIB Super Card có thể ${Math.round(rate*100)}%, trần 500.000 điểm/danh mục. Nhớ chọn danh mục “${pick}” trong MyVIB trước khi thanh toán. ${capTextWithHistory(capInfo)}`);
+      }
+      break;
+    }
+    case 'vib_max': {
+      const plan = {starter:[.005,500000,0], plus:[.05,500000,100000], pro:[.08,1000000,166666], elite:[.10,1500000,333333]}[settings.vibMaxPlan];
+      if(catMatches(ctx,['ecommerce','online','dining','travel','fashion','entertainment','shopee','lazada','tiktok'])){reward=capReward(amt,plan[0],plan[1]) - plan[2] - 5000; note.push(`Gói ${settings.vibMaxPlan}: ${Math.round(plan[0]*1000)/10}%, trần ${fmt(plan[1])}/tháng; đã trừ phí gói và 5k phí tháng.`);}
+      else {reward=amt*.001-plan[2]-5000; note.push('Ngoài danh mục chính, tạm tính 0.1% rồi trừ phí gói.');}
+      break;
+    }
+
+    case 'sacombank_cashback':
+      if(isRewardableOnline(ctx) || catMatches(ctx,['online','ecommerce','shopee','lazada','tiktok','shopeefood'])){reward=capReward(amt,.05,600000); note.push('Online trong/ngoài nước 5%, tổng hoàn tối đa 600k/kỳ TBGD.');}
+      else if(ctx.foreign && (ctx.channel==='pos' || ctx.channel==='contactless')){reward=capReward(amt,.03,600000); note.push('POS nước ngoài 3%, tổng hoàn tối đa 600k/kỳ TBGD.');}
+      else {reward=capReward(amt,.005,600000); note.push('Giao dịch khác 0.5%, trần 600k/kỳ TBGD.');}
+      break;
+    case 'sacombank_amex_credit':
+      if(catMatches(ctx,['travel','airline']) || ['4511','4722','7011'].includes(ctx.mcc)){reward=capReward(amt,.20,1000000); note.push('Vé máy bay/khách sạn/đại lý du lịch 20%, trần 1tr/kỳ TBGD. Cần đúng MCC Sacombank ghi nhận.');}
+      else if(ctx.foreign && (ctx.channel==='pos' || ctx.channel==='contactless')){reward=capReward(amt,.10,1000000); note.push('Giao dịch nước ngoài tại POS/mPOS 10%, trần 1tr/kỳ TBGD.');}
+      else if(ctx.foreign && isRewardableOnline(ctx)){reward=capReward(amt,.05,1000000); note.push('Giao dịch trực tuyến nước ngoài 5%, trần 1tr/kỳ TBGD.');}
+      else {reward=capReward(amt,.005,1000000); note.push('Giao dịch khác 0.5%, trần 1tr/kỳ TBGD.');}
+      break;
+    case 'mb_jcb_platinum':
+      if(!settings.mbJcbPriority){reward=0; status='warn'; note.push('Chưa tick điều kiện khách hàng ưu tiên / đủ điều kiện MB JCB Platinum.');}
+      else if(catMatches(ctx,['dining']) || merchantIncludes(ctx,['aeon','muji','fuji mart','family mart','ministop'])){let rate=spend>=5000000?.10:.05; let cap=spend>=5000000?500000:200000; reward=capReward(amt,rate,cap); note.push(`Ẩm thực/siêu thị Nhật ${Math.round(rate*100)}%, trần ${fmt(cap)}.`);}
+      else note.push('Mạnh cho ẩm thực và Aeon/Muji/Fuji Mart/Family Mart/Ministop.');
+      break;
+  }
+  const runCtx = thresholdRunContextForCard(card, ctx, spend);
+  if(runCtx && runCtx.txnPart > 0){
+    const beforeSpend = Math.max(0, runCtx.spend - runCtx.txnPart);
+    const neededBeforeTxn = Math.max(0, runCtx.threshold - beforeSpend);
+    if(beforeSpend < runCtx.threshold && runCtx.spend >= runCtx.threshold && neededBeforeTxn > 0){
+      thresholdAmount = runCtx.threshold;
+      thresholdSpend = runCtx.spend;
+      thresholdPreSpend = beforeSpend;
+      thresholdTxnApplied = runCtx.txnPart;
+      thresholdNeededBeforeTxn = neededBeforeTxn;
+      thresholdSurplusIfUseTxn = Math.max(0, runCtx.txnPart - neededBeforeTxn);
+      thresholdLabel = runCtx.label || 'DSCT';
+    }
+  }
+
+  if(isHardExcludedBill(ctx) && reward > 0){
+    reward = 0;
+    status = 'warn';
+    note.push(`App nhận diện đây là ${labelCategory(ctx.effectiveCat || effectiveCategory(ctx))}; tạm không tính hoàn/điểm cho nhóm này để tránh nhầm với online chung. Nếu sao kê ra MCC mua sắm hợp lệ thì nhập MCC đó rồi tính lại.`);
+  }
+
+  const lim = settings.cardLimits?.[card.id] || {limit:0, used:0};
+  if(lim.limit > 0){
+    const remaining = lim.limit - (lim.used || 0);
+    if(amt > remaining){
+      reward = -1;
+      status = 'bad';
+      note.push(`Không đủ hạn mức còn lại (${fmt(remaining)}).`);
+    } else {
+      note.push(`Hạn mức còn lại sau GD: ${fmt(remaining - amt)}.`);
+    }
+  }
+  if(reward<0){status='bad'}
+  return {card, reward, potentialReward, thresholdGap, thresholdAmount, thresholdSpend, thresholdPreSpend, thresholdTxnApplied, thresholdNeededBeforeTxn, thresholdSurplusIfUseTxn, thresholdLabel, note:note.join(' '), status};
+}
+
+
+function isBirthdayMonthForTransaction(txDate){
+  if(!settings.personalBirthday || !txDate) return false;
+  const bd = new Date(settings.personalBirthday + 'T00:00:00');
+  const td = new Date(txDate + 'T00:00:00');
+  if(Number.isNaN(bd.getTime()) || Number.isNaN(td.getTime())) return false;
+  return bd.getMonth() === td.getMonth();
+}
+
+
+function resultHasMissingThreshold(r){
+  if((Number(r.thresholdGap)||0) > 0) return true;
+  const txt = String(r.note || '').toLowerCase();
+  return txt.includes('cần dsct') ||
+    txt.includes('nếu chi tiêu thêm') ||
+    txt.includes('chưa đủ điều kiện') ||
+    txt.includes('cần tổng chi tiêu') ||
+    txt.includes('cần chi thêm') ||
+    txt.includes('để mở hoàn');
+}
+
+function resultIsCapHit(r){
+  const txt = String(r.note || '').toLowerCase();
+  return txt.includes('giao dịch này đã chạm hạn mức hoàn') ||
+    txt.includes('đã hết hạn mức hoàn') ||
+    txt.includes('sau giao dịch này sẽ hết hạn mức hoàn') ||
+    txt.includes('không còn trần để hoàn thêm') ||
+    txt.includes('giao dịch này chỉ nhận tối đa');
+}
+
+function resultNeedsDsctOptimization(r){
+  if(resultHasMissingThreshold(r)) return false;
+  const neededBefore = Number(r.thresholdNeededBeforeTxn) || 0;
+  const txnPart = Number(r.thresholdTxnApplied) || 0;
+  const surplus = Number(r.thresholdSurplusIfUseTxn) || 0;
+  return neededBefore > 0 && txnPart >= neededBefore && surplus > 0 && resultIsCapHit(r);
+}
+
+function resultNeedsAction(r){
+  const txt = String(r.note || '').toLowerCase();
+  return !resultHasMissingThreshold(r) && (
+    txt.includes('nhớ chọn') ||
+    txt.includes('cần chọn') ||
+    txt.includes('nếu đây chỉ là') ||
+    txt.includes('cần thao tác')
+  );
+}
+
+function resultScore(r){
+  // Ưu tiên thẻ có thể ăn hoàn ngay. Thẻ chưa đủ DSCT chỉ là nhóm cân nhắc, không xếp như hoàn chắc chắn.
+  if(resultHasMissingThreshold(r) || resultNeedsDsctOptimization(r)){
+    const gap = Number(r.thresholdGap) || 0;
+    const surplus = Number(r.thresholdSurplusIfUseTxn) || 0;
+    return -1000000000 - gap + Math.min(surplus, 1000000) * 0.0001;
+  }
+  if(r.status === 'bad') return -2000000000 + (Number(r.reward)||0);
+  return Number(r.reward) || 0;
+}
+
+function resultRankLabel(r){
+  if(resultHasMissingThreshold(r) || resultNeedsDsctOptimization(r)) return 'Cân nhắc DSCT · tối ưu trước khi dùng';
+  if(resultNeedsAction(r)) return 'Gợi ý tốt nhất · cần thao tác';
+  return 'Gợi ý tốt nhất có thể dùng ngay';
+}
+
+function resultAmountText(r){
+  if(resultHasMissingThreshold(r) || resultNeedsDsctOptimization(r)){
+    const gap = Number(r.thresholdGap) || 0;
+    const neededBefore = Number(r.thresholdNeededBeforeTxn) || 0;
+    const txnPart = Number(r.thresholdTxnApplied) || 0;
+    const surplus = Number(r.thresholdSurplusIfUseTxn) || 0;
+    if(txnPart > 0 && neededBefore > 0 && txnPart >= neededBefore){
+      return surplus > 0 ? `Đủ mốc · dư ${fmt(surplus)}` : 'Vừa đủ mốc DSCT';
+    }
+    return `Cần thêm ${fmt(gap)}`;
+  }
+  return fmt(r.reward);
+}
+
+function resultBenefitClass(r){
+  if(resultHasMissingThreshold(r) || resultNeedsDsctOptimization(r)) return 'benefit potential';
+  if(!Number(r.reward)) return 'benefit zero';
+  return 'benefit';
+}
+
+function resultRowClass(r,i){
+  const cls = ['cardRow'];
+  if(i===0) cls.push('top');
+  if(resultHasMissingThreshold(r) || resultNeedsDsctOptimization(r)) cls.push('needThreshold');
+  else if(resultNeedsAction(r)) cls.push('needAction');
+  return cls.join(' ');
+}
+
+function resultTags(r){
+  let out = r.card.tags.map(t=>`<span class="tag">${t}</span>`).join('');
+  if(resultHasMissingThreshold(r)) out += ' <span class="tag needSpend">chưa đủ DSCT</span>';
+  else if(resultNeedsDsctOptimization(r)) out += ' <span class="tag needSpend">tối ưu DSCT</span>';
+  else if(resultNeedsAction(r) || r.status==='warn') out += ' <span class="tag action">cần thao tác</span>';
+  if(resultIsCapHit(r)) out += ' <span class="tag bad">chạm trần</span>';
+  if(r.status==='bad') out += ' <span class="tag bad">lợi ròng âm</span>';
+  return out;
+}
+
+function resultGroupKey(r){
+  if(resultHasMissingThreshold(r) || resultNeedsDsctOptimization(r)) return 'potential';
+  if(resultNeedsAction(r) || r.status === 'warn') return 'action';
+  if((Number(r.reward)||0) <= 0 || r.status === 'bad') return 'low';
+  return 'good';
+}
+
+function sanitizeThresholdNote(note){
+  if(!note) return '';
+  let out = String(note);
+  // Khi chưa đủ DSCT, không show “hoàn tiềm năng” để tránh hiểu nhầm là được hoàn thật.
+  out = out.replace(/Khi đủ mốc,[^.。!?]*[.。!?]/gi, '');
+  out = out.replace(/Khi đủ mốc,[^<]*(?=<|$)/gi, '');
+  out = out.replace(/giao dịch này ước tính hoàn [^\.。!?<]*(?:[\.。!?]|(?=<|$))/gi, '');
+  out = out.replace(/giao dịch này ước tính [^\.。!?<]*(?:[\.。!?]|(?=<|$))/gi, '');
+  return out;
+}
+
+function resultThresholdDecision(r){
+  if(!resultHasMissingThreshold(r) && !resultNeedsDsctOptimization(r)) return '';
+  const gap = Number(r.thresholdGap) || 0;
+  const neededBefore = Number(r.thresholdNeededBeforeTxn) || 0;
+  const txnPart = Number(r.thresholdTxnApplied) || 0;
+  const surplus = Number(r.thresholdSurplusIfUseTxn) || 0;
+  const capHit = resultIsCapHit(r);
+  const isOptimization = resultNeedsDsctOptimization(r);
+  const alt = r.altCardName ? `<div><b>Thẻ khác nên dùng cho phần dư/hóa đơn hiện tại:</b> ${escapeHtml(r.altCardName)}${Number(r.altReward)>0 ? ' · ước tính ' + fmt(r.altReward) : ''}</div>` : '<div><b>Thẻ khác:</b> Chưa thấy thẻ nào hoàn ngay tốt hơn trong dữ liệu đang bật.</div>';
+  let advice;
+  if(txnPart > 0 && neededBefore > 0 && txnPart >= neededBefore){
+    advice = `Hóa đơn này có thể giúp đủ điều kiện DSCT. Nhưng chỉ cần khoảng ${fmt(neededBefore)} để mở mốc; phần dư ${fmt(surplus)} nên so với thẻ khác, nhất là khi thẻ này đã chạm trần.`;
+  } else {
+    advice = `Chưa nên xem là thẻ hoàn tiền cho hóa đơn này. Sau giao dịch vẫn còn thiếu ${fmt(gap)} DSCT; ưu tiên thẻ khác nếu có hoàn ngay.`;
+  }
+  return `<div class="thresholdAlert" style="color:#b7791f">
+    <div><b>Tình trạng:</b> ${isOptimization ? 'Trước giao dịch chưa đủ DSCT; hóa đơn này làm đủ mốc nhưng có phần dư cần tối ưu.' : 'Chưa đủ DSCT nên không hiển thị mức hoàn tiềm năng như hoàn thật.'}</div>
+    ${capHit ? '<div><b>Trần hoàn:</b> Thẻ/nhóm này đã chạm hoặc sắp chạm trần, không nên dùng thêm chỉ vì thấy tỷ lệ cao.</div>' : ''}
+    <div><b>Cần để mở mốc trước giao dịch:</b> ${fmt(neededBefore)}</div>
+    <div><b>Còn thiếu sau khi tính giao dịch này:</b> ${fmt(gap)}</div>
+    ${surplus > 0 ? `<div><b>Phần tiền dư nếu dùng hết hóa đơn này:</b> ${fmt(surplus)}</div>` : ''}
+    <div><b>Lời khuyên:</b> ${advice}</div>
+    ${alt}
+  </div>`;
+}
+
+
+function detectBankKey(cardOrName){
+  const raw = typeof cardOrName === 'string'
+    ? cardOrName.toLowerCase()
+    : `${cardOrName?.id||''} ${cardOrName?.name||''}`.toLowerCase();
+  if(raw.includes('techcombank') || raw.includes('tcb_')) return 'techcombank';
+  if(raw.includes('vpbank') || raw.includes('vp_') || raw.includes('cake')) return 'vpbank';
+  if(raw.includes('sacombank')) return 'sacombank';
+  if(raw.includes('mb ') || raw.includes('mb_') || raw.includes('mbbank') || raw.includes('priority visa signature')) return 'mb';
+  if(raw.includes('acb')) return 'acb';
+  if(raw.includes('vib')) return 'vib';
+  if(raw.includes('msb')) return 'msb';
+  if(raw.includes('woori')) return 'woori';
+  if(raw.includes('standard chartered') || raw.includes('sc_')) return 'sc';
+  if(raw.includes('uob')) return 'uob';
+  if(raw.includes('cimb')) return 'cimb';
+  if(raw.includes('ncb')) return 'ncb';
+  if(raw.includes('bvbank') || raw.includes('bvb_')) return 'bvbank';
+  if(raw.includes('shinhan')) return 'shinhan';
+  if(raw.includes('hdbank') || raw.includes('hdb_')) return 'hdbank';
+  if(raw.includes('ocb')) return 'ocb';
+  return 'card';
+}
+
+function bankBrandInfo(cardOrName){
+  const key = detectBankKey(cardOrName);
+  const map = {
+    techcombank:{label:'TCB', bg:'#e11d48', fg:'#fff'},
+    vpbank:{label:'VP', bg:'#0f9d58', fg:'#fff'},
+    sacombank:{label:'STB', bg:'#2563eb', fg:'#fff'},
+    mb:{label:'MB', bg:'#1d4ed8', fg:'#fff'},
+    acb:{label:'ACB', bg:'#2563eb', fg:'#fff'},
+    vib:{label:'VIB', bg:'#f59e0b', fg:'#111827'},
+    msb:{label:'MSB', bg:'#0f766e', fg:'#fff'},
+    woori:{label:'WR', bg:'#60a5fa', fg:'#0f172a'},
+    sc:{label:'SC', bg:'#10b981', fg:'#fff'},
+    uob:{label:'UOB', bg:'#1d4ed8', fg:'#fff'},
+    cimb:{label:'CIMB', bg:'#dc2626', fg:'#fff'},
+    ncb:{label:'NCB', bg:'#7c3aed', fg:'#fff'},
+    bvbank:{label:'BVB', bg:'#14b8a6', fg:'#fff'},
+    shinhan:{label:'SH', bg:'#2563eb', fg:'#fff'},
+    hdbank:{label:'HDB', bg:'#ea580c', fg:'#fff'},
+    ocb:{label:'OCB', bg:'#16a34a', fg:'#fff'},
+    card:{label:'CARD', bg:'#64748b', fg:'#fff'}
+  };
+  return map[key] || map.card;
+}
+
+function renderBankLogo(cardOrName, size='md'){
+  const b = bankBrandInfo(cardOrName);
+  const cls = size === 'sm' ? 'bankLogo sm' : (size === 'lg' ? 'bankLogo lg' : 'bankLogo');
+  const title = typeof cardOrName === 'string' ? cardOrName : (cardOrName?.name || 'Card');
+  return `<span class="${cls}" style="background:${b.bg};color:${b.fg}" title="${escapeHtml(title)}">${b.label}</span>`;
+}
+
+function renderCardTitle(card, prefix=''){
+  return `<div class="cardTitleRow">${renderBankLogo(card)}<div class="cardNameWrap"><div class="cardName">${prefix}${escapeHtml(card.name)}</div></div></div>`;
+}
+
+function renderResultRow(r){
+  const i = r.rank || 0;
+  const noteForDisplay = (resultHasMissingThreshold(r) || resultNeedsDsctOptimization(r)) ? sanitizeThresholdNote(r.note) : r.note;
+  return `
+    <div class="${resultRowClass(r,i-1)}">
+      <div>
+        ${renderCardTitle(r.card, `${i}. `)}
+        ${renderNotePanels(noteForDisplay, {hideRewardAlerts: resultHasMissingThreshold(r) || resultNeedsDsctOptimization(r)})}
+        ${resultThresholdDecision(r)}
+        <div class="tags">${resultTags(r)}</div>
+      </div>
+      <div>
+        <div class="${resultBenefitClass(r)}">${resultAmountText(r)}</div>
+        <button class="tiny" style="margin-top:8px" onclick="saveSuggestedExpense('${r.card.id}')">Dùng thẻ này</button>
+        <button class="tiny" style="margin-top:6px" onclick="saveLoanFromSuggestion('${r.card.id}')">Cho mượn thẻ này</button>
+      </div>
+    </div>`;
+}
+
+function renderResultGroup(title, sub, rows, cssClass, open=true){
+  if(!rows.length) return '';
+  return `
+    <details class="resultGroup ${cssClass}" ${open ? 'open' : ''}>
+      <summary>
+        <span>
+          <span class="resultGroupTitle">${title}</span>
+          <span class="resultGroupSub">${sub}</span>
+        </span>
+        <span class="resultGroupCount">${rows.length} thẻ</span>
+      </summary>
+      <div class="cards">${rows.map(renderResultRow).join('')}</div>
+    </details>`;
+}
+
+function renderGroupedResults(rows){
+  const groups = {
+    good: rows.filter(r=>resultGroupKey(r)==='good'),
+    potential: rows.filter(r=>resultGroupKey(r)==='potential'),
+    action: rows.filter(r=>resultGroupKey(r)==='action'),
+    low: rows.filter(r=>resultGroupKey(r)==='low')
+  };
+  return `
+    <div class="resultGroups">
+      ${renderResultGroup('Nên dùng ngay', 'Đã đủ điều kiện, có thể bấm lưu chi tiêu luôn.', groups.good, 'goodGroup', true)}
+      ${renderResultGroup('Cần tối ưu DSCT / Chia giao dịch', 'Không hiển thị mức hoàn tiềm năng như hoàn chắc chắn; app báo số cần chi thêm, phần dư và thẻ thay thế.', groups.potential, 'potentialGroup', groups.good.length===0)}
+      ${renderResultGroup('Cần thao tác trước khi dùng', 'Ví dụ cần chọn danh mục, kích hoạt gói hoặc kiểm tra điều kiện riêng.', groups.action, 'actionGroup', groups.good.length===0 && groups.potential.length===0)}
+      ${renderResultGroup('Không ưu tiên lúc này', 'Hoàn thấp, hết trần hoặc lợi ròng không tốt cho giao dịch này.', groups.low, 'lowGroup', false)}
+    </div>`;
+}
+
+function calc(){
+  saveSettings();
+  const currentSpend = num('monthSpend');
+  const spendMode = val('spendMode');
+  const ctx = {
+    amount:num('amount'), merchant:val('merchant').toLowerCase().trim(), mcc:val('mcc').trim(),
+    category:val('category'), channel:val('channel'), monthSpend:currentSpend, manualSpend:currentSpend, txDate:val('date'),
+    foreign:val('foreign')==='yes', birthday:(val('birthday')==='yes' || (val('birthday')==='auto' && isBirthdayMonthForTransaction(val('date')))), birthdayMode:val('birthday'), spendMode
+  };
+  ctx.projectedSpend = ctx.monthSpend + ctx.amount;
+  ctx.spendForThreshold = spendMode === 'current' ? ctx.monthSpend : (spendMode === 'optimistic' ? 999999999 : ctx.projectedSpend);
+  ctx.thresholdLabel = spendMode === 'current' ? 'lịch sử chi tiêu từng thẻ' : (spendMode === 'optimistic' ? 'dự kiến cuối kỳ' : 'lịch sử từng thẻ + hóa đơn này');
+  ctx.mccCat = inferMccCat(ctx.mcc);
+  ctx.merchantCat = inferMerchantCat(ctx.merchant);
+  ctx.effectiveCat = effectiveCategory(ctx);
+  lastCalcContext = ctx;
+  if(!ctx.amount){ $('results').innerHTML='<div class="empty">Nhập số tiền giao dịch trước má.</div>'; return; }
+  const rows = cards.filter(c=>settings.owned[c.id]).map(c=>evaluate(c,ctx)).sort((a,b)=>resultScore(b)-resultScore(a) || (Number(b.reward)||0)-(Number(a.reward)||0));
+  if(!rows.length){ $('results').innerHTML='<div class="empty">Chưa bật thẻ nào trong Cài đặt thẻ. Bật ít nhất 1 thẻ rồi tính lại má.</div>'; return; }
+  rows.forEach((r,i)=>r.rank=i+1);
+  const bestGoodForAlt = rows.find(r=>resultGroupKey(r)==='good' && (Number(r.reward)||0) > 0);
+  rows.forEach(r=>{
+    if(bestGoodForAlt && r.card.id !== bestGoodForAlt.card.id && resultHasMissingThreshold(r)){
+      r.altCardName = bestGoodForAlt.card.name;
+      r.altReward = bestGoodForAlt.reward;
+    }
+  });
+  const best = rows[0];
+  const bestGood = rows.find(r=>resultGroupKey(r)==='good' && (Number(r.reward)||0) > 0);
+  const usableBest = bestGood || best;
+  const noPositiveReward = !bestGood;
+  const bestLabel = noPositiveReward ? 'Không thấy thẻ có hoàn chắc chắn' : (usableBest === best ? resultRankLabel(best) : 'Gợi ý dùng ngay tốt nhất');
+  const html = `
+    <div class="resultTop">
+      <div class="winner ${noPositiveReward ? 'needThreshold' : ''}">
+        <div class="rank ${resultHasMissingThreshold(usableBest)||noPositiveReward?'warnRank':''}">${bestLabel}</div>
+        ${noPositiveReward && isHardExcludedBill(ctx) ? `<h3>Không nên tính là Online chung</h3>` : `<div class="winnerTitleRow">${renderBankLogo(usableBest.card,'lg')}<h3>${escapeHtml(usableBest.card.name)}</h3></div>`}
+        <div class="money ${resultHasMissingThreshold(usableBest)||noPositiveReward?'potential':''}">${noPositiveReward ? '0đ' : resultAmountText(usableBest)}</div>
+        ${noPositiveReward && isHardExcludedBill(ctx) ? `<div class="notePanels"><div class="notePanel historyPanel"><div class="notePanelTitle">Cảnh báo nhận diện</div><div class="cardMeta">Merchant này được nhận diện là ${labelCategory(ctx.effectiveCat)}. App đã chặn tính hoàn online để tránh gợi ý sai.</div></div></div>` : renderNotePanels(usableBest.note)}
+      </div>
+      <div class="note">Điều kiện DSCT đang xét theo: <b>${ctx.thresholdLabel}</b>${ctx.manualSpend ? ` · DSCT cộng thêm thủ công: <b>${fmt(ctx.manualSpend)}</b>` : ''}${ctx.spendMode==='optimistic' ? ' · Chế độ này chỉ tham khảo, không xếp là chắc chắn.' : ''}. App tự cộng lịch sử chi tiêu đã lưu của từng thẻ, gồm cả khoản cho mượn thẻ.</div>
+      ${blocksGenericOnline(ctx) ? `<div class="note warn"><b>App nhận diện merchant là ${labelCategory(ctx.effectiveCat)}.</b> Dù kênh thanh toán là online, app không tính như “Online chung” để tránh gợi ý sai hoàn tiền cho hóa đơn điện/nước/viễn thông/xăng dầu.</div>` : ''}
+      <div class="note">Sinh nhật: <b>${ctx.birthday ? 'Đang trong tháng sinh nhật' : 'Không áp dụng'}</b>${settings.personalBirthday ? ` · Ngày sinh đã lưu: ${settings.personalBirthday}` : ' · Chưa nhập ngày sinh trong Cài đặt'}</div>
+      <div class="note"><b>Cách đọc kết quả:</b> mở nhóm <b>Nên dùng ngay</b> trước. Nhóm màu vàng là thẻ có ưu đãi cao nhưng còn thiếu DSCT hoặc điều kiện, không nên xem là chắc chắn.</div>
+      ${renderGroupedResults(rows)}
+    </div>`;
+  $('results').innerHTML = html;
+  compactifyResultNotes();
+}
+
+
+
+function renderNotePanels(noteHtml, opts={}){
+  const temp = document.createElement('div');
+  temp.innerHTML = noteHtml || '';
+
+  const alerts = [...temp.querySelectorAll('.thresholdAlert')];
+  const historyAlerts = [];
+  const rewardAlerts = [];
+
+  alerts.forEach(el=>{
+    const txt = (el.textContent || '').toLowerCase();
+
+    const isReward = txt.includes('trần hoàn') ||
+      txt.includes('hạn mức hoàn') ||
+      txt.includes('trần nhóm') ||
+      txt.includes('còn trần') ||
+      txt.includes('ước tính hoàn') ||
+      txt.includes('gợi ý chi tiêu thông minh') ||
+      txt.includes('giao dịch này chỉ nhận tối đa') ||
+      txt.includes('chi tiêu tối đa còn nên dùng');
+
+    const isHistory = txt.includes('dsct') ||
+      txt.includes('chi tiêu thêm') ||
+      txt.includes('đủ mốc') ||
+      txt.includes('cần điều kiện') ||
+      txt.includes('lịch sử đã lưu');
+
+    if(isReward){
+      if(!opts.hideRewardAlerts) rewardAlerts.push(el.outerHTML);
+    }
+    else if(isHistory) historyAlerts.push(el.outerHTML);
+    else {
+      if(!opts.hideRewardAlerts) rewardAlerts.push(el.outerHTML);
+    }
+
+    el.remove();
+  });
+
+  const summaryHtml = temp.innerHTML.trim();
+  const blocks = [];
+
+  if(summaryHtml){
+    blocks.push(`
+      <div class="notePanel">
+        <div class="notePanelTitle">Ưu đãi / Ghi chú nhanh</div>
+        <div class="cardMeta">${summaryHtml}</div>
+      </div>
+    `);
+  }
+  if(historyAlerts.length){
+    blocks.push(`
+      <div class="notePanel historyPanel">
+        <div class="notePanelTitle">Điều kiện DSCT / Cần chi thêm</div>
+        ${historyAlerts.join('')}
+      </div>
+    `);
+  }
+  if(rewardAlerts.length){
+    blocks.push(`
+      <div class="notePanel rewardPanel">
+        <div class="notePanelTitle">Hoàn tiền / Hạn mức còn lại</div>
+        ${rewardAlerts.join('')}
+      </div>
+    `);
+  }
+
+  return `<div class="notePanels">${blocks.join('')}</div>`;
+}
+function compactifyResultNotes(){
+  document.querySelectorAll('#results .thresholdAlert').forEach(box=>{
+    if(box.dataset.compact === '1') return;
+    box.dataset.compact = '1';
+    box.classList.add('compact');
+
+    const children = [...box.querySelectorAll(':scope > div')];
+    const metricRows = [];
+    const headlines = [];
+
+    children.forEach(div=>{
+      const text = (div.textContent || '').trim();
+      if(!text) return;
+      const p = text.indexOf(':');
+      if(p > 0){
+        const label = text.slice(0,p).trim();
+        const value = text.slice(p+1).trim();
+        const low = label.toLowerCase() + ' ' + value.toLowerCase();
+        let extra = '';
+        if(low.includes('ước tính hoàn') || low.includes('giao dịch này chỉ nhận') || low.includes('còn trần sau')) extra = ' importantMetric';
+        if(low.includes('cần chi thêm') || low.includes('chỉ nên dùng') || low.includes('phần nên tách') || low.includes('phần vượt')) extra = ' warningMetric';
+        metricRows.push(`<div class="metricRow${extra}"><span class="metricLabel">${escapeHtml(label)}</span><span class="metricValue">${escapeHtml(value)}</span></div>`);
+      } else {
+        headlines.push(`<div class="metricHeadline"><span>${escapeHtml(text)}</span></div>`);
+      }
+    });
+
+    box.innerHTML = `${headlines.join('')}${metricRows.length ? `<div class="metricGrid">${metricRows.join('')}</div>` : ''}`;
+  });
+}
+function renderCards(){
+  $('cardList').innerHTML = cards.map((c,i)=>`
+    <div class="dataCard">
+      <h4><span class="cardTitleRow">${renderBankLogo(c)}<span>${i+1}. ${escapeHtml(c.name)}</span></span></h4>
+      <div class="mini">${c.summary}</div>
+      <div class="tags">${c.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+    </div>`).join('');
+}
+
+function enableAllCards(){
+  cards.forEach(c=>{
+    settings.owned[c.id] = true;
+    settings.cardLimits[c.id] = settings.cardLimits[c.id] || {limit:0,used:0};
+    settings.paymentRules[c.id] = settings.paymentRules[c.id] || {statementDay:20,dueDays:15,remindBefore:3,paid:false};
+  });
+  settings.vibSuperMode = settings.vibSuperMode || 'online5';
+  localStorage.setItem('co_settings', JSON.stringify(settings));
+  loadSettingsUI();
+  alert('Đã bật toàn bộ thẻ. Các lần mở sau app vẫn giữ đúng lựa chọn bật/tắt của má.');
+}
+
+function setToday(){ $('date').value=todayLocal(); }
+
+function setExpenseToday(){ if($('expenseDate')) $('expenseDate').value=todayLocal(); }
+
+function parseMoneyText(s){
+  const candidates = [];
+  const moneyRegex = /(?:tổng cộng|thành tiền|total|amount|payment|paid|sum|grand total)?[^\d]{0,20}((?:\d{1,3}[\.,\s]){1,4}\d{3}|\d{4,9})(?:\s?(?:đ|vnd|vnđ))?/gi;
+  let m;
+  while((m = moneyRegex.exec(s)) !== null){
+    let raw = m[1] || '';
+    let cleaned = raw.replace(/[^\d]/g,'');
+    let n = Number(cleaned);
+    if(n >= 1000 && n <= 500000000) candidates.push({n, raw, idx:m.index, text:m[0]});
+  }
+  const priorityWords = ['tổng cộng','thành tiền','total','grand total','amount','payment','paid'];
+  candidates.sort((a,b)=>{
+    const aw = priorityWords.some(w => a.text.toLowerCase().includes(w)) ? 1 : 0;
+    const bw = priorityWords.some(w => b.text.toLowerCase().includes(w)) ? 1 : 0;
+    if(aw !== bw) return bw-aw;
+    return b.n-a.n;
+  });
+  return candidates[0]?.n || 0;
+}
+
+function parseMerchantText(s){
+  const lines = s.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  const bad = /^(ngày|date|time|giờ|invoice|receipt|hóa đơn|hoa don|mã|ma |tel|tax|mst|vat|địa chỉ|dia chi|cashier|thu ngân|qty|sl|đơn giá|don gia|total|tổng|thành tiền)/i;
+  const useful = lines.find(l => l.length >= 3 && l.length <= 40 && !bad.test(l) && /[a-zA-ZÀ-ỹ]/.test(l));
+  return useful || '';
+}
+
+async function runExpenseOCR(){
+  const file = $('expenseImage').files && $('expenseImage').files[0];
+  if(!file){ alert('Chọn ảnh hóa đơn/sao kê trước má.'); return; }
+  const status = $('ocrStatus');
+  const textBox = $('ocrText');
+  if(!window.Tesseract){
+    status.innerHTML = 'Không tải được thư viện OCR. Kiểm tra internet rồi mở lại app.';
+    return;
+  }
+  try{
+    status.innerHTML = 'Đang OCR ảnh... 0%';
+    const result = await Tesseract.recognize(file, 'vie+eng', {
+      logger: m => {
+        if(m.status && typeof m.progress === 'number'){
+          status.innerHTML = `Đang OCR: ${m.status} · ${Math.round(m.progress*100)}%`;
+        }
+      }
+    });
+    const text = result?.data?.text || '';
+    textBox.value = text;
+    const amount = parseMoneyText(text);
+    const merchant = parseMerchantText(text);
+    if(amount) setMoneyValue('expenseAmount', amount);
+    if(merchant && !$('expenseMerchant').value) $('expenseMerchant').value = merchant;
+    status.innerHTML = `OCR xong. Gợi ý số tiền: <b>${amount ? fmt(amount) : 'chưa nhận diện được'}</b>${merchant ? ` · Merchant: <b>${merchant}</b>` : ''}. Má kiểm tra lại trước khi lưu.`;
+  }catch(err){
+    console.error(err);
+    status.innerHTML = 'OCR lỗi. Ảnh có thể mờ hoặc thư viện chưa tải được. Má nhập tay hoặc thử ảnh rõ hơn.';
+  }
+}
+
+function saveExpenseRecord(){
+  saveSettings();
+  const file = $('expenseImage').files && $('expenseImage').files[0];
+  const record = {
+    id: Date.now(),
+    date: val('expenseDate') || todayLocal(),
+    amount: num('expenseAmount'),
+    merchant: val('expenseMerchant'),
+    category: val('expenseCategory'),
+    mcc: val('expenseMcc'),
+    cardId: val('expenseCard'),
+    imageName: file ? file.name : '',
+    imageData: '',
+    affectsDebt: true,
+    debtTrackedAt: todayLocal()
+  };
+  if(!record.amount){ alert('Nhập số tiền trước má.'); return; }
+
+  const commit = () => {
+    expenses.unshift(record);
+    persistExpenses();
+    adjustCardUsed(record.cardId, record.amount);
+    renderExpenses(); renderRewards(); loadSettingsUI(); renderReminders(); renderOverview();
+    $('expenseAmount').value=''; $('expenseMerchant').value=''; $('expenseMcc').value=''; $('expenseImage').value='';
+  };
+
+  if(file){
+    if(file.size > 900000){
+      record.imageName = file.name + ' (không lưu ảnh vì file lớn)';
+      commit();
+    } else {
+      const reader = new FileReader();
+      reader.onload = e => { record.imageData = e.target.result; commit(); };
+      reader.readAsDataURL(file);
+    }
+  } else commit();
+}
+
+function renderExpenses(){
+  const box = $('expenseList');
+  if(!box) return;
+  const total = expenses.reduce((s,e)=>s+(Number(e.amount)||0),0);
+  $('expenseStats').innerHTML = `Đã lưu <b>${expenses.length}</b> giao dịch · Tổng chi tiêu: <b>${fmt(total)}</b>. Dữ liệu lưu trên trình duyệt này.`;
+  if(!expenses.length){ box.innerHTML = '<div class="empty">Chưa có chi tiêu nào.</div>'; return; }
+  box.innerHTML = expenses.map(e=>{
+    const card = cards.find(c=>c.id===e.cardId);
+    const img = e.imageData ? `<img class="thumb" src="${e.imageData}" alt="receipt"/>` : `<div class="thumb" style="display:grid;place-items:center;color:#94a3b8;font-size:11px">No image</div>`;
+    return `<div class="expenseRow">
+      <div>${img}</div>
+      <div>
+        <div class="cardName">${e.merchant || 'Không tên'} · ${fmt(e.amount)}</div>
+        <div class="cardMeta">${e.date} · ${card?card.name:e.cardId} · ${e.category}${e.mcc?' · MCC '+e.mcc:''}${e.suggested?' · lưu từ gợi ý':''}</div>
+        <div class="mini">${e.imageName ? 'Ảnh: '+e.imageName : 'Không có ảnh'}</div>
+      </div>
+      <button class="tiny" onclick="deleteExpense(${e.id})">Xóa</button>
+    </div>`;
+  }).join('');
+}
+
+function deleteExpense(id){
+  const record = expenses.find(e=>e.id===id);
+  untrackExpenseDebt(record);
+  expenses = expenses.filter(e=>e.id!==id);
+  localStorage.setItem('co_expenses', JSON.stringify(expenses));
+  renderExpenses(); renderRewards(); loadSettingsUI(); renderReminders(); renderOverview();
+}
+
+function clearExpenseHistory(){
+  if(confirm('Xóa toàn bộ lịch sử chi tiêu đã lưu trên trình duyệt này?')){
+    expenses.forEach(untrackExpenseDebt);
+    expenses = [];
+    localStorage.setItem('co_expenses', JSON.stringify(expenses));
+    renderExpenses(); renderRewards(); loadSettingsUI(); renderReminders(); renderOverview();
+  }
+}
+
+function useLastExpenseForCalc(){
+  const e = expenses[0];
+  if(!e){ alert('Chưa có chi tiêu nào để đưa qua màn hình tính.'); return; }
+  setMoneyValue('amount', e.amount);
+  $('merchant').value = e.merchant || '';
+  $('mcc').value = e.mcc || '';
+  $('category').value = e.category || 'other';
+  calc();
+  document.querySelector('[data-tab="result"]').click();
+}
+
+
+
+async function runLoanOCR(){
+  const file = $('loanImage').files && $('loanImage').files[0];
+  if(!file){ alert('Chọn ảnh hóa đơn/sao kê khoản mượn trước má.'); return; }
+  const status = $('loanOcrStatus');
+  const textBox = $('loanOcrText');
+  if(!window.Tesseract){
+    status.innerHTML = 'Không tải được thư viện OCR. Kiểm tra internet rồi mở lại app.';
+    return;
+  }
+  try{
+    status.innerHTML = 'Đang OCR ảnh khoản mượn... 0%';
+    const result = await Tesseract.recognize(file, 'vie+eng', {
+      logger: m => {
+        if(m.status && typeof m.progress === 'number'){
+          status.innerHTML = `Đang OCR: ${m.status} · ${Math.round(m.progress*100)}%`;
+        }
+      }
+    });
+    const text = result?.data?.text || '';
+    textBox.value = text;
+    const amount = parseMoneyText(text);
+    const merchant = parseMerchantText(text);
+    if(amount) setMoneyValue('loanAmount', amount);
+    if(merchant && !$('loanMerchant').value) $('loanMerchant').value = merchant;
+    status.innerHTML = `OCR xong. Gợi ý số tiền: <b>${amount ? fmt(amount) : 'chưa nhận diện được'}</b>${merchant ? ` · Merchant: <b>${merchant}</b>` : ''}. Má kiểm tra lại trước khi lưu.`;
+  }catch(err){
+    console.error(err);
+    status.innerHTML = 'OCR lỗi. Ảnh có thể mờ hoặc thư viện chưa tải được. Má nhập tay hoặc thử ảnh rõ hơn.';
+  }
+}
+
+function setLoanToday(){
+  const today = todayLocal();
+  if($('loanDate')) $('loanDate').value=today;
+  if($('loanDueDate')) $('loanDueDate').value='';
+  if($('loanPaidDate')) $('loanPaidDate').value=today;
+  if($('bulkPayDate')) $('bulkPayDate').value=today;
+}
+
+function saveLoanRecord(){
+  saveSettings();
+  const amount = num('loanAmount');
+  const cardId = val('loanCard');
+  const file = $('loanImage').files && $('loanImage').files[0];
+  if(!val('loanBorrower').trim()){ alert('Nhập tên người mượn trước má.'); return; }
+  if(!amount){ alert('Nhập số tiền trước má.'); return; }
+
+  const initialPaid = num('loanPaidAmount');
+  const initialPaidDate = todayLocal();
+  const paidAmount = Math.min(initialPaid, amount);
+
+  const record = {
+    id: Date.now(),
+    borrower: val('loanBorrower').trim(),
+    amount,
+    amountPaid: paidAmount,
+    payments: paidAmount ? [{amount: paidAmount, date: initialPaidDate, note:'Nhập lúc tạo khoản mượn'}] : [],
+    cardId,
+    merchant: val('loanMerchant').trim(),
+    date: val('loanDate') || todayLocal(),
+    dueDate: '',
+    note: val('loanNote').trim(),
+    paid: paidAmount >= amount,
+    paidDate: paidAmount >= amount ? initialPaidDate : '',
+    imageName: file ? file.name : '',
+    imageData: ''
+  };
+
+  const commitLoan = () => {
+    loanRecords.unshift(record);
+    localStorage.setItem('co_loans', JSON.stringify(loanRecords));
+
+    // Khoản này vẫn là chi tiêu trên thẻ, nên lưu vào lịch sử chi tiêu và cộng dư nợ/đã dùng.
+    expenses.unshift({
+      id: record.id + 1,
+      date: record.date,
+      amount: record.amount,
+      merchant: record.merchant || `Cho ${record.borrower} mượn thẻ`,
+      category: 'other',
+      mcc: '',
+      cardId: record.cardId,
+      imageName: record.imageName || `Khoản cho mượn thẻ: ${record.borrower}`,
+      imageData: record.imageData || '',
+      loanId: record.id,
+      affectsDebt: true,
+      debtTrackedAt: todayLocal()
+    });
+    persistExpenses();
+
+    adjustCardUsed(cardId, amount);
+
+    $('loanBorrower').value=''; $('loanAmount').value=''; $('loanMerchant').value=''; $('loanPaidAmount').value=''; $('loanNote').value=''; $('loanImage').value=''; $('loanOcrText').value='';
+    renderLoans(); renderExpenses(); renderRewards(); loadSettingsUI(); renderReminders(); renderOverview(); renderOverview();
+  };
+
+  if(file){
+    if(file.size > 900000){
+      record.imageName = file.name + ' (không lưu ảnh vì file lớn)';
+      commitLoan();
+    } else {
+      const reader = new FileReader();
+      reader.onload = e => { record.imageData = e.target.result; commitLoan(); };
+      reader.readAsDataURL(file);
+    }
+  } else {
+    commitLoan();
+  }
+}
+
+function renderLoans(){
+  const box = $('loanList');
+  if(!box) return;
+  updateBorrowerDatalist();
+  const unpaid = loanRecords.filter(x=>(Number(x.amount||0)-Number(x.amountPaid||0))>0);
+  const totalUnpaid = unpaid.reduce((s,x)=>s+Math.max(0, Number(x.amount||0)-Number(x.amountPaid||0)),0);
+  const byBorrower = {};
+  unpaid.forEach(x=>byBorrower[x.borrower]=(byBorrower[x.borrower]||0)+Math.max(0, Number(x.amount||0)-Number(x.amountPaid||0)));
+  const borrowerText = Object.entries(byBorrower).map(([k,v])=>`${k}: ${fmt(v)}`).join(' · ');
+  $('loanStats').innerHTML = `Còn phải thu: <b>${fmt(totalUnpaid)}</b> từ <b>${unpaid.length}</b> khoản. ${borrowerText ? '<br/>' + borrowerText : ''}`;
+
+  if(!loanRecords.length){ box.innerHTML='<div class="empty">Chưa có khoản cho mượn thẻ nào.</div>'; return; }
+  const today = new Date(todayLocal() + 'T00:00:00');
+  box.innerHTML = loanRecords.map(x=>{
+    const card = cards.find(c=>c.id===x.cardId);
+    const amountPaid = Number(x.amountPaid || 0);
+    const remaining = Math.max(0, Number(x.amount || 0) - amountPaid);
+    const isPaid = remaining <= 0;
+    const status = isPaid ? `Đã thu đủ ${x.paidDate ? 'ngày ' + x.paidDate : ''}` : 'Còn phải thu';
+    const img = x.imageData ? `<img class="thumb" src="${x.imageData}" alt="loan receipt" style="margin-bottom:8px"/>` : '';
+    const paymentText = (x.payments || []).length ? '<br/>Lịch sử trả: ' + (x.payments || []).map(p=>`${fmt(p.amount)} (${p.date || '-'})`).join(' · ') : '';
+    return `<div class="loanRow ${isPaid?'paid':'unpaid'}">
+      <div>
+        ${img}
+        <div class="cardName">${x.borrower} · ${fmt(x.amount)}</div>
+        <div class="cardMeta">
+          Thẻ: <b>${card?card.name:x.cardId}</b><br/>
+          Ngày mượn: ${x.date || '-'} · ${x.merchant || 'không ghi merchant'}<br/>
+          Đã trả: <b>${fmt(amountPaid)}</b> · Còn lại: <b class="${remaining>0?'bad':''}">${fmt(remaining)}</b>
+        </div>
+        <div class="mini">${x.note || ''}${x.imageName ? '<br/>Ảnh: ' + x.imageName : ''}${paymentText}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="benefit ${isPaid?'':'bad'}">${status}</div>
+        <div class="btns" style="justify-content:flex-end;margin-top:8px">
+          <button class="tiny" onclick="addLoanPayment(${x.id})">Ghi nhận trả tiền</button>
+          ${isPaid ? `<button class="tiny" onclick="toggleLoanPaid(${x.id}, false)">Reset chưa thu</button>` : `<button class="tiny" onclick="toggleLoanPaid(${x.id}, true)">Đã thu đủ</button>`}
+          <button class="tiny" onclick="deleteLoan(${x.id})">Xóa</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleLoanPaid(id, paid){
+  const today = todayLocal();
+  loanRecords = loanRecords.map(x=>{
+    if(x.id!==id) return x;
+    if(paid){
+      const outstanding = Math.max(0, Number(x.amount||0)-Number(x.amountPaid||0));
+      return {
+        ...x,
+        amountPaid: Number(x.amount || 0),
+        paid: true,
+        paidDate: today,
+        payments: outstanding > 0 ? [...(x.payments || []), {amount: outstanding, date: today, note:'Đánh dấu đã thu đủ'}] : (x.payments || [])
+      };
+    }
+    return {...x, amountPaid:0, payments:[], paid:false, paidDate:''};
+  });
+  localStorage.setItem('co_loans', JSON.stringify(loanRecords));
+  renderLoans();
+}
+
+function addLoanPayment(id){
+  const rec = loanRecords.find(x=>x.id===id);
+  if(!rec) return;
+  const remaining = Math.max(0, Number(rec.amount||0)-Number(rec.amountPaid||0));
+  if(remaining<=0){ alert('Khoản này đã thu đủ rồi má.'); return; }
+  const raw = prompt(`Nhập số tiền đã trả thêm. Còn lại hiện tại: ${fmt(remaining)}`, String(remaining));
+  if(raw===null) return;
+  const amount = parseMoney(raw);
+  if(amount<=0){ alert('Số tiền không hợp lệ.'); return; }
+  const date = todayLocal();
+  loanRecords = loanRecords.map(x=>{
+    if(x.id!==id) return x;
+    const pay = Math.min(amount, remaining);
+    const newPaid = Math.min(Number(x.amount||0), Number(x.amountPaid||0)+pay);
+    const fullyPaid = newPaid >= Number(x.amount||0);
+    return {
+      ...x,
+      amountPaid: newPaid,
+      paid: fullyPaid,
+      paidDate: fullyPaid ? date : (x.paidDate || ''),
+      payments: [...(x.payments || []), {amount: pay, date, note:'Trả thêm'}]
+    };
+  });
+  localStorage.setItem('co_loans', JSON.stringify(loanRecords));
+  renderLoans();
+}
+
+function deleteLoan(id){
+  const rec = loanRecords.find(x=>x.id===id);
+  if(!confirm('Xóa khoản mượn thẻ này?')) return;
+  const linked = expenses.filter(e=>e.loanId===id);
+  linked.forEach(untrackExpenseDebt);
+  expenses = expenses.filter(e=>e.loanId!==id);
+  loanRecords = loanRecords.filter(x=>x.id!==id);
+  localStorage.setItem('co_expenses', JSON.stringify(expenses));
+  localStorage.setItem('co_loans', JSON.stringify(loanRecords));
+  renderLoans(); renderExpenses(); renderRewards(); loadSettingsUI(); renderReminders(); renderOverview(); renderOverview();
+}
+
+
+function uniqueBorrowers(){
+  return [...new Set(loanRecords.map(x=>x.borrower).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi'));
+}
+
+function updateBorrowerDatalist(){
+  const dl = $('borrowerList');
+  if(!dl) return;
+  dl.innerHTML = uniqueBorrowers().map(n=>`<option value="${n}"></option>`).join('');
+}
+
+function borrowerSummary(name){
+  const records = loanRecords.filter(x=>x.borrower && x.borrower.toLowerCase() === name.toLowerCase());
+  const totalBorrowed = records.reduce((s,x)=>s+Number(x.amount||0),0);
+  const totalPaid = records.reduce((s,x)=>s+Number(x.amountPaid||0),0);
+  const remaining = Math.max(0,totalBorrowed-totalPaid);
+  return {records,totalBorrowed,totalPaid,remaining};
+}
+
+function applyBulkPayment(){
+  const name = val('bulkPayBorrower').trim();
+  const amountRaw = num('bulkPayAmount');
+  const payDate = val('bulkPayDate') || todayLocal();
+  if(!name){ alert('Nhập tên người trả trước má.'); return; }
+  if(!amountRaw){ alert('Nhập số tiền trả tổng trước má.'); return; }
+
+  let remainingPayment = amountRaw;
+  const targets = loanRecords
+    .filter(x=>x.borrower && x.borrower.toLowerCase() === name.toLowerCase())
+    .filter(x=>Math.max(0, Number(x.amount||0)-Number(x.amountPaid||0)) > 0)
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
+
+  if(!targets.length){ alert('Người này không còn khoản nào chưa thu.'); return; }
+
+  loanRecords = loanRecords.map(x=>{
+    const target = targets.find(t=>t.id===x.id);
+    if(!target || remainingPayment<=0) return x;
+    const outstanding = Math.max(0, Number(x.amount||0)-Number(x.amountPaid||0));
+    const pay = Math.min(outstanding, remainingPayment);
+    remainingPayment -= pay;
+    const newPaid = Number(x.amountPaid||0) + pay;
+    const fullyPaid = newPaid >= Number(x.amount||0);
+    return {
+      ...x,
+      amountPaid: newPaid,
+      paid: fullyPaid,
+      paidDate: fullyPaid ? payDate : (x.paidDate || ''),
+      payments: [...(x.payments || []), {amount:pay, date:payDate, note:'Trả tổng'}]
+    };
+  });
+
+  localStorage.setItem('co_loans', JSON.stringify(loanRecords));
+  $('bulkPayAmount').value='';
+  renderLoans();
+  showBorrowerHistory(name);
+  alert(`Đã ghi nhận ${fmt(amountRaw-remainingPayment)} cho ${name}.${remainingPayment>0 ? ' Còn dư chưa phân bổ: '+fmt(remainingPayment) : ''}`);
+}
+
+function showBorrowerHistory(nameFromArg){
+  const name = (nameFromArg || val('bulkPayBorrower') || '').trim();
+  const box = $('borrowerHistory');
+  if(!box) return;
+  if(!name){ box.innerHTML='<div class="historyBox note">Nhập tên người mượn rồi bấm “Xem lịch sử người này”.</div>'; return; }
+  const {records,totalBorrowed,totalPaid,remaining} = borrowerSummary(name);
+  if(!records.length){ box.innerHTML=`<div class="historyBox note">Không tìm thấy lịch sử cho <b>${name}</b>.</div>`; return; }
+  const rows = records
+    .slice()
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id)
+    .map(x=>{
+      const remain = Math.max(0, Number(x.amount||0)-Number(x.amountPaid||0));
+      const payments = (x.payments||[]).map(p=>`${fmt(p.amount)} ngày ${p.date || '-'}`).join(' · ');
+      return `<div class="mini" style="margin-top:8px">
+        <b>${x.date || '-'}</b> · ${x.merchant || 'Khoản mượn'} · Mượn ${fmt(x.amount)} · Đã trả ${fmt(x.amountPaid||0)} · Còn ${fmt(remain)}
+        ${payments ? '<br/>Trả: ' + payments : ''}
+      </div>`;
+    }).join('');
+  box.innerHTML = `<div class="historyBox">
+    <div class="cardName">Lịch sử đã mượn: ${name}</div>
+    <div class="cardMeta">
+      Tổng đã mượn: <b>${fmt(totalBorrowed)}</b> · Đã trả: <b>${fmt(totalPaid)}</b> · Còn lại: <b class="${remaining>0?'bad':''}">${fmt(remaining)}</b>
+    </div>
+    ${rows}
+  </div>`;
+}
+
+function clearLoanHistory(){
+  if(confirm('Xóa toàn bộ khoản cho mượn thẻ?')){
+    const loanIds = new Set(loanRecords.map(x=>x.id));
+    const linked = expenses.filter(e=>loanIds.has(e.loanId));
+    linked.forEach(untrackExpenseDebt);
+    expenses = expenses.filter(e=>!loanIds.has(e.loanId));
+    loanRecords=[];
+    localStorage.setItem('co_expenses', JSON.stringify(expenses));
+    localStorage.setItem('co_loans', JSON.stringify(loanRecords));
+    renderLoans(); renderExpenses(); renderRewards(); loadSettingsUI(); renderReminders(); renderOverview(); renderOverview();
+  }
+}
+
+function saveLoanFromSuggestion(cardId){
+  saveSettings();
+  const ctx = lastCalcContext || {
+    amount:num('amount'),
+    merchant:val('merchant'),
+    category:val('category'),
+    mcc:val('mcc')
+  };
+  if(!ctx.amount){ alert('Chưa có số tiền để lưu.'); return; }
+  const borrower = prompt('Nhập tên người mượn / người nhờ thanh toán:');
+  if(!borrower) return;
+  const due = prompt('Hạn người đó trả lại, dạng YYYY-MM-DD, có thể bỏ trống:', '');
+  const record = {
+    id: Date.now(),
+    borrower: borrower.trim(),
+    amount: ctx.amount,
+    cardId,
+    merchant: ctx.merchant || val('merchant') || '',
+    date: val('date') || todayLocal(),
+    dueDate: due || '',
+    note: 'Lưu từ màn hình gợi ý thẻ',
+    amountPaid: 0,
+    payments: [],
+    paid: false,
+    paidDate: ''
+  };
+  loanRecords.unshift(record);
+  localStorage.setItem('co_loans', JSON.stringify(loanRecords));
+
+  expenses.unshift({
+    id: record.id + 1,
+    date: record.date,
+    amount: record.amount,
+    merchant: record.merchant || `Cho ${record.borrower} mượn thẻ`,
+    category: ctx.category || val('category') || 'other',
+    mcc: ctx.mcc || val('mcc') || '',
+    cardId,
+    imageName: `Khoản cho mượn thẻ: ${record.borrower}`,
+    imageData: '',
+    suggested: true,
+    loanId: record.id,
+    affectsDebt: true,
+    debtTrackedAt: todayLocal()
+  });
+  persistExpenses();
+
+  adjustCardUsed(cardId, ctx.amount);
+
+  renderLoans(); renderExpenses(); renderRewards(); loadSettingsUI(); renderReminders(); renderOverview(); renderOverview();
+  if(confirm('Đã lưu khoản cho mượn thẻ. Mở tab Cho mượn thẻ không?')) document.querySelector('[data-tab="loans"]').click();
+}
+
+
+function saveSuggestedExpense(cardId){
+  saveSettings();
+  const ctx = lastCalcContext || {
+    amount:num('amount'),
+    merchant:val('merchant'),
+    category:val('category'),
+    mcc:val('mcc')
+  };
+  if(!ctx.amount){ alert('Chưa có số tiền để lưu.'); return; }
+  const card = cards.find(c=>c.id===cardId);
+  const record = {
+    id: Date.now(),
+    date: val('date') || todayLocal(),
+    amount: ctx.amount,
+    merchant: ctx.merchant || val('merchant') || '',
+    category: ctx.category || val('category') || 'other',
+    mcc: ctx.mcc || val('mcc') || '',
+    cardId,
+    imageName: 'Lưu từ màn hình gợi ý',
+    imageData: '',
+    suggested: true,
+    affectsDebt: true,
+    debtTrackedAt: todayLocal()
+  };
+  expenses.unshift(record);
+  persistExpenses();
+
+  adjustCardUsed(cardId, ctx.amount);
+
+  renderExpenses();
+  renderRewards();
+  loadSettingsUI();
+  renderReminders();
+
+  const ok = confirm(`Đã lưu chi tiêu bằng ${card ? card.name : cardId} và cập nhật dư nợ/đã dùng. Mở lịch sử chi tiêu không?`);
+  if(ok) document.querySelector('[data-tab="expenses"]').click();
+}
+
+function demo(){
+  setMoneyValue('amount','2000000'); $('merchant').value='Shopee'; $('mcc').value='5262'; $('category').value='shopee'; $('channel').value='online'; setMoneyValue('monthSpend','0'); $('foreign').value='no'; calc();
+}
+
+
+function safeDate(year, month, day){
+  const last = new Date(year, month + 1, 0).getDate();
+  return new Date(year, month, Math.min(day, last));
+}
+function addDays(date, days){
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+function fmtDate(d){
+  return d.toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+function ymd(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), da=String(d.getDate()).padStart(2,'0');
+  return `${y}${m}${da}`;
+}
+function nextStatementDate(statementDay){
+  const now = new Date();
+  let d = safeDate(now.getFullYear(), now.getMonth(), statementDay);
+  if(d < new Date(now.getFullYear(), now.getMonth(), now.getDate())) d = safeDate(now.getFullYear(), now.getMonth()+1, statementDay);
+  return d;
+}
+function getReminderRows(){
+  saveSettings();
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return cards.filter(c=>settings.owned[c.id]).map(c=>{
+    const rule = settings.paymentRules[c.id] || {statementDay:20,dueDays:15,remindBefore:3,paid:false};
+    const lim = settings.cardLimits[c.id] || {limit:0, used:0};
+    const statement = nextStatementDate(rule.statementDay || 20);
+    const due = addDays(statement, rule.dueDays || 15);
+    const daysLeft = Math.ceil((due - today) / 86400000);
+    const remindDate = addDays(due, -(rule.remindBefore || 3));
+    return {card:c, rule, lim, statement, due, daysLeft, remindDate};
+  }).sort((a,b)=>a.due-b.due);
+}
+function renderReminders(){
+  const box = $('reminderList');
+  if(!box) return;
+  const rows = getReminderRows();
+  if(!rows.length){ box.innerHTML='<div class="empty">Chưa bật thẻ nào.</div>'; return; }
+  box.innerHTML = rows.map(r=>{
+    const cls = r.daysLeft < 0 ? 'overdue' : (r.daysLeft <= (r.rule.remindBefore || 3) ? 'dueSoon' : '');
+    const status = r.rule.paid ? 'Đã thanh toán kỳ hiện tại' : (r.daysLeft < 0 ? `Quá hạn ${Math.abs(r.daysLeft)} ngày` : `Còn ${r.daysLeft} ngày`);
+    const debt = r.lim.used ? fmt(r.lim.used) : 'chưa nhập';
+    return `<div class="reminderRow ${cls}">
+      <div>
+        <div class="cardTitleRow">${renderBankLogo(r.card)}<div class="cardName">${escapeHtml(r.card.name)}</div></div>
+        <div class="cardMeta">
+          Ngày sao kê kế tiếp: <b>${fmtDate(r.statement)}</b> · Hạn thanh toán dự kiến: <b>${fmtDate(r.due)}</b><br/>
+          Dư nợ/đã dùng: <b>${debt}</b> · Nhắc trước: ${r.rule.remindBefore || 3} ngày · Ngày nhắc: ${fmtDate(r.remindDate)}
+        </div>
+      </div>
+      <div class="benefit ${r.daysLeft<0?'bad':r.daysLeft <= (r.rule.remindBefore||3)?'warn':''}">${status}</div>
+    </div>`;
+  }).join('');
+}
+function makeICS(){
+  const rows = getReminderRows().filter(r=>!r.rule.paid);
+  const lines = [
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Card Optimizer VN//Payment Reminder//VI','CALSCALE:GREGORIAN','METHOD:PUBLISH'
+  ];
+  rows.forEach((r,idx)=>{
+    const title = `Nhắc thanh toán ${r.card.name}`;
+    const desc = `Hạn thanh toán dự kiến: ${fmtDate(r.due)}. Dư nợ/đã dùng: ${r.lim.used?fmt(r.lim.used):'chưa nhập'}. Kiểm tra sao kê ngân hàng trước khi thanh toán.`;
+    const remindDate = r.remindDate;
+    lines.push('BEGIN:VEVENT');
+    lines.push(`UID:card-optimizer-${r.card.id}-${ymd(r.due)}@local`);
+    lines.push(`DTSTAMP:${ymd(new Date())}T000000`);
+    lines.push(`DTSTART;VALUE=DATE:${ymd(remindDate)}`);
+    lines.push(`SUMMARY:${title.replace(/,/g,'\\,')}`);
+    lines.push(`DESCRIPTION:${desc.replace(/,/g,'\\,')}`);
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+}
+function downloadICS(){
+  const ics = makeICS();
+  const blob = new Blob([ics], {type:'text/calendar;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'card-payment-reminders.ics'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+async function enableBrowserNotify(){
+  if(!('Notification' in window)){ alert('Trình duyệt này không hỗ trợ Notification API.'); return; }
+  const permission = await Notification.requestPermission();
+  if(permission === 'granted'){
+    new Notification('Card Optimizer VN', {body:'Đã bật thông báo. Bản web chỉ nhắc khi trang đang mở; muốn nhắc chắc chắn hãy xuất .ics vào lịch.'});
+  } else {
+    alert('Chưa được cấp quyền thông báo.');
+  }
+}
+
+
+
+function getSelectedMonth(){
+  const v = $('rewardMonth')?.value;
+  if(v) return v;
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function setRewardMonthDefault(){
+  const el = $('rewardMonth');
+  if(!el) return;
+  const d = new Date();
+  el.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function expenseMonth(e){
+  if(!e.date) return '';
+  return String(e.date).slice(0,7);
+}
+
+function monthExpenses(month){
+  return expenses.filter(e => expenseMonth(e) === month);
+}
+
+function expCat(e){
+  const ctx = {...e, mccCat: inferMccCat(e.mcc || ''), merchantCat: inferMerchantCat(e.merchant || '')};
+  const merchant = stripVietnamese(e.merchant || '');
+  if(merchant.includes('shopeefood')) return 'shopeefood';
+  if(merchant.includes('shopee')) return 'shopee';
+  if(merchant.includes('lazada')) return 'lazada';
+  if(merchant.includes('tiktok')) return 'tiktok';
+  return effectiveCategory(ctx) || 'other';
+}
+
+function expIs(e, cats){
+  const ctx = {...e, mccCat: inferMccCat(e.mcc || ''), merchantCat: inferMerchantCat(e.merchant || '')};
+  const cat = expCat(ctx);
+  const merchant = stripVietnamese(e.merchant || '');
+  if(cats.includes(cat) || cats.includes(ctx.mccCat) || cats.includes(ctx.merchantCat)) return true;
+  if(cats.includes('online') && !blocksGenericOnline(ctx) && ['online','ecommerce','shopee','lazada','tiktok','shopeefood'].includes(cat)) return true;
+  if(cats.includes('ecommerce') && !blocksGenericOnline(ctx) && ['shopee','lazada','tiktok'].includes(cat)) return true;
+  if(cats.includes('shopee') && merchant.includes('shopee') && !merchant.includes('shopeefood')) return true;
+  if(cats.includes('shopeefood') && merchant.includes('shopeefood')) return true;
+  if(cats.includes('lazada') && merchant.includes('lazada')) return true;
+  if(cats.includes('tiktok') && merchant.includes('tiktok')) return true;
+  if(cats.includes('wallet') && e.channel === 'wallet') return true;
+  return false;
+}
+
+function sumAmount(list, predicate=()=>true){
+  return list.filter(predicate).reduce((s,e)=>s+(Number(e.amount)||0),0);
+}
+
+function rewardGroup(label, exps, predicate, rate, cap, opts={}){
+  const matched = exps.filter(predicate);
+  const spend = sumAmount(matched);
+  let raw = 0;
+  if(opts.perTxnCap){
+    raw = matched.reduce((s,e)=>{
+      const amt = Number(e.amount)||0;
+      const txnCap = typeof opts.perTxnCap === 'function' ? opts.perTxnCap(amt) : opts.perTxnCap;
+      return s + Math.min(amt * rate, txnCap);
+    },0);
+  } else {
+    raw = spend * rate;
+  }
+  const threshold = opts.threshold || 0;
+  const thresholdSpend = opts.thresholdSpend ?? sumAmount(exps);
+  const thresholdOk = !threshold || thresholdSpend >= threshold;
+  const earned = thresholdOk ? Math.min(raw, cap ?? raw) : 0;
+  const potential = Math.min(raw, cap ?? raw);
+  const remaining = cap ? Math.max(0, cap - earned) : null;
+  const gap = thresholdOk ? 0 : Math.max(0, threshold - thresholdSpend);
+  return {label, spend, raw, earned, potential, cap, remaining, gap, threshold, thresholdSpend, thresholdOk, count: matched.length, note: opts.note || ''};
+}
+
+function makeRewardSummary(card, exps){
+  const totalSpend = sumAmount(exps);
+  const groups = [];
+  let note = '';
+
+  switch(card.id){
+    case 'acb_platinum':
+      groups.push(rewardGroup('Ăn uống 5%', exps, e=>expIs(e,['dining']), .05, 100000));
+      groups.push(rewardGroup('Mua sắm online 5%', exps, e=>expIs(e,['online','ecommerce','shopee','lazada','tiktok']), .05, 100000));
+      groups.push(rewardGroup('Apple Pay/Samsung Pay/Google Pay/Garmin Pay 5%', exps, e=>expIs(e,['wallet']), .05, 100000, {note:'Nhóm này là thanh toán bằng thẻ qua mobile wallet/tokenized payment, không phải ví điện tử nạp tiền/chuyển tiền.'}));
+      note = 'ACB Visa Platinum có trần 100.000 điểm/lĩnh vực/tháng, tổng 300.000 điểm/tháng.';
+      break;
+
+    case 'msb_online':
+      groups.push(rewardGroup('Online 10%', exps, e=>expIs(e,['online','ecommerce','shopee','lazada','tiktok','entertainment']), .10, 300000, {threshold:3000000}));
+      note = 'Cần DSCT từ 3 triệu/kỳ; trần hoàn 300.000đ/kỳ.';
+      break;
+
+    case 'vp_srewards': {
+      const eligible = vpSRewardsEligibleSpendFromExpenses(exps);
+      groups.push(rewardGroup('Shopee + ShopeeFood 12%', exps, e=>expIs(e,['shopee','shopeefood']) && !vpSRewardsIsExcluded(e), .12, 400000, {threshold:5000000, thresholdSpend:eligible}));
+      groups.push(rewardGroup('Siêu thị/Ăn uống/Di chuyển 4%', exps, e=>expIs(e,['dining','supermarket','transport']) && !vpSRewardsIsExcluded(e), .04, 200000, {threshold:5000000, thresholdSpend:eligible}));
+      groups.push(rewardGroup('Chi tiêu còn lại 0,1%', exps, e=>!expIs(e,['shopee','shopeefood','dining','supermarket','transport']) && !vpSRewardsIsExcluded(e), .001, null, {threshold:5000000, thresholdSpend:eligible}));
+      note = `Cần DSCT hợp lệ từ 5 triệu/kỳ. DSCT hợp lệ đang lưu: ${fmt(eligible)}. Shopee+ShopeeFood chung trần 400k xu; siêu thị/ăn uống/di chuyển chung trần 200k xu; chi tiêu còn lại 0,1% không giới hạn.`;
+      break;
+    }
+
+    case 'cake': {
+      const cakeEligible = exps.filter(e=>!cakeIsExcluded(e)).reduce((s,e)=>s+(Number(e.amount)||0),0);
+      groups.push(rewardGroup('Nhóm cố định 20%', exps, e=>expIs(e,['ecommerce','shopee','lazada','tiktok','travel','fashion']) && !cakeIsExcluded(e), .20, 200000, {threshold:5000000, thresholdSpend:cakeEligible, perTxnCap: amt=>amt>=200000?50000:10000}));
+      groups.push(rewardGroup('Nhóm linh hoạt 20%', exps, e=>expIs(e,['supermarket','dining','transport','convenience','insurance','hotel','professional_ewallet','airline','cinema']) && !cakeIsExcluded(e), .20, 200000, {threshold:5000000, thresholdSpend:cakeEligible, perTxnCap: amt=>amt>=200000?50000:10000, note:'Cần chọn đúng 2 danh mục linh hoạt trong app Cake.'}));
+      note = `Cake cần DSCT hợp lệ 5 triệu/kỳ. DSCT hợp lệ đang lưu: ${fmt(cakeEligible)}. Trần 50k/GD từ 200k, 10k/GD dưới 200k; 200k/danh mục.`;
+      break;
+    }
+
+    case 'ocb_igen': {
+      const high = totalSpend >= 30000000;
+      const min = totalSpend >= 5000000;
+      groups.push(rewardGroup(high?'Shopee/TikTok 12%':'Shopee/TikTok 7%', exps, e=>expIs(e,['shopee','tiktok']), high?.12:.07, high?700000:350000, {threshold:5000000}));
+      groups.push(rewardGroup('Apple/Google Pay 3%', exps, e=>expIs(e,['wallet']), .03, high?300000:150000, {threshold:5000000}));
+      note = min ? (high ? 'OCB iGen Shopee/TikTok đã đạt mốc 30 triệu: dùng tier cao.' : 'OCB iGen Shopee/TikTok đã đạt mốc 5 triệu; nếu đạt 30 triệu sẽ lên tier cao.') : 'OCB iGen có hoàn Shopee/TikTok, cần DSCT từ 5 triệu/tháng để mở hoàn.';
+      break;
+    }
+
+    case 'vib_supercard':
+      groups.push(rewardGroup('Mua sắm 10%', exps, e=>expIs(e,['fashion','supermarket','ecommerce','shopee','lazada','tiktok']), .10, 500000, {note:'Cần chọn danh mục Mua sắm trong MyVIB.'}));
+      groups.push(rewardGroup('Online 5%', exps, e=>expIs(e,['online','ecommerce','shopee','lazada','tiktok','shopeefood']), .05, 500000, {note:'Nếu là online chung, chọn Giao dịch trực tuyến trong MyVIB.'}));
+      groups.push(rewardGroup('Ăn uống 10%', exps, e=>expIs(e,['dining','shopeefood']), .10, 500000));
+      groups.push(rewardGroup('Du lịch 10%', exps, e=>expIs(e,['travel','airline','vietjet']), .10, 500000));
+      note = 'Super Card cần chọn đúng danh mục trong MyVIB. Trần 500.000 điểm/danh mục, tổng 1.000.000 điểm/kỳ.';
+      break;
+
+    case 'mb_priority_sig':
+      groups.push(rewardGroup('Nhóm 10%', exps, e=>expIs(e,['travel','dining','entertainment','education','insurance']), .10, 400000, {threshold:10000000, note:'Cần chọn nhóm 10% đúng.'}));
+      groups.push(rewardGroup('Nhóm 2%', exps, e=>expIs(e,['fashion','supermarket','ecommerce','online','shopee','lazada','tiktok','transport','health']), .02, 400000, {threshold:10000000, note:'Cần chọn 2 nhóm 2% đúng.'}));
+      note = 'MB Priority cần DSCT 10 triệu/kỳ. Tổng hoàn tối đa 800.000đ/kỳ.';
+      break;
+
+    case 'cimb_revi':
+      groups.push(rewardGroup('Nhóm ưu đãi 20%', exps, e=>expIs(e,['transport','supermarket','ecommerce','shopee','lazada','tiktok','travel','airline','entertainment']), .20, 500000, {threshold:3000000}));
+      note = 'CIMB REVI có nhóm Shopee/TMĐT 20%. Cần DSCT 3 triệu; trần app đang gom tổng 500k/tháng.';
+      break;
+
+    case 'shinhan_hi':
+      groups.push(rewardGroup('Đối tác/Shopee/Grab 5%', exps, e=>expIs(e,['shopee','transport','travel']), .05, 400000, {threshold:3000000}));
+      note = 'Shinhan Hi-Point cần DSCT 3 triệu để nhận 5% nhóm đối tác.';
+      break;
+
+    case 'bvb_lifestyle':
+      groups.push(rewardGroup('ChatGPT/Netflix/VieON 50%', exps, e=>/chatgpt|netflix|vieon/i.test(e.merchant||''), .50, 50000, {threshold:3000000}));
+      groups.push(rewardGroup('Nhóm tự chọn', exps, e=>expIs(e,['dining','fashion','travel']), .05, 200000, {threshold:3000000, note:'Tỷ lệ thực tế phụ thuộc DSCT và danh mục đã chọn.'}));
+      note = 'BVBank Lifestyle cần DSCT 3 triệu/tháng; nhóm tự chọn có tier theo DSCT.';
+      break;
+
+    case 'hdb_vietjet':
+      groups.push(rewardGroup('Vietjet 10%', exps, e=>expIs(e,['vietjet']) || /vietjet/i.test(e.merchant||''), .10, 500000));
+      groups.push(rewardGroup('Du lịch/Ẩm thực 10%', exps, e=>expIs(e,['travel','dining']), .10, 300000));
+      note = 'HDBank Vietjet có trần riêng Vietjet và du lịch/ẩm thực.';
+      break;
+
+    case 'sacombank_cashback':
+      groups.push(rewardGroup('Online 5%', exps, e=>expIs(e,['online','ecommerce','shopee','lazada','tiktok','shopeefood']), .05, 600000));
+      note = 'Sacombank Cashback còn có POS nước ngoài 3% và giao dịch khác 0,5%; app đang tổng hợp nhóm online chính.';
+      break;
+
+    case 'sacombank_amex_credit':
+      groups.push(rewardGroup('Du lịch 20%', exps, e=>expIs(e,['travel','airline']), .20, 1000000));
+      note = 'Sacombank Amex còn có POS nước ngoài/online nước ngoài; app đang tổng hợp nhóm du lịch chính.';
+      break;
+
+    default:
+      // Những thẻ chưa có rule tổng hợp chi tiết: ước tính theo reward nền nếu có thể.
+      note = 'Chưa có bảng tổng hợp hoàn tiền chi tiết cho thẻ này; vẫn giữ lịch sử chi tiêu để xét mốc.';
+      break;
+  }
+
+  const activeGroups = groups.filter(g=>g.spend>0 || g.earned>0 || (g.cap && g.remaining < g.cap));
+  const earned = activeGroups.reduce((s,g)=>s+g.earned,0);
+  const potential = activeGroups.reduce((s,g)=>s+g.potential,0);
+  const remaining = groups.reduce((s,g)=>s+(g.remaining ?? 0),0);
+  const full = activeGroups.some(g=>g.cap && g.remaining===0 && (g.earned>0 || g.spend>0));
+  const near = groups.some(g=>g.gap>0);
+  const availableGroups = groups.filter(g=>(g.cap ? g.remaining > 0 : true));
+  const unusedAvailableGroups = groups.filter(g=>(g.cap ? g.remaining > 0 : true) && g.spend===0);
+
+  return {card, totalSpend, groups, activeGroups, availableGroups, unusedAvailableGroups, earned, potential, remaining, full, near, note};
+}
+
+function renderRewards(){
+  const list = $('rewardList');
+  if(!list) return;
+  const month = getSelectedMonth();
+  const exps = monthExpenses(month);
+  const byCard = {};
+  exps.forEach(e=>{
+    byCard[e.cardId] = byCard[e.cardId] || [];
+    byCard[e.cardId].push(e);
+  });
+
+  const summaries = cards
+    .map(c=>makeRewardSummary(c, byCard[c.id] || []))
+    .filter(s=>s.totalSpend>0 || (s.groups && s.groups.length>0))
+    .sort((a,b)=>b.earned-a.earned || b.totalSpend-a.totalSpend || ((b.availableGroups||[]).length-(a.availableGroups||[]).length));
+
+  const totalSpend = summaries.reduce((s,x)=>s+x.totalSpend,0);
+  const totalEarned = summaries.reduce((s,x)=>s+x.earned,0);
+  const totalRemaining = summaries.reduce((s,x)=>s+x.remaining,0);
+
+  $('rewardStats').innerHTML = `Tháng <b>${month}</b>: tổng chi tiêu đã lưu <b>${fmt(totalSpend)}</b> · hoàn/điểm ước tính <b>${fmt(totalEarned)}</b> · còn trần ở nhóm đã phát sinh <b>${fmt(totalRemaining)}</b>.`;
+
+  if(!summaries.length){
+    list.innerHTML = '<div class="empty">Chưa có dữ liệu hoàn tiền để hiển thị.</div>';
+    return;
+  }
+
+  list.innerHTML = summaries.map(s=>{
+    const status = s.full ? '<span class="tag bad">Có nhóm hết hạn mức hoàn</span>' : (s.near ? '<span class="tag warn">Còn nhóm cần mở điều kiện</span>' : '<span class="tag">Đang còn trần</span>');
+
+    const activeGroups = (s.activeGroups && s.activeGroups.length ? s.activeGroups : s.groups.filter(g=>g.spend>0 || g.earned>0));
+    const availableGroups = s.availableGroups || s.groups.filter(g=>(g.cap ? g.remaining > 0 : true));
+    const unusedAvailable = s.unusedAvailableGroups || s.groups.filter(g=>(g.cap ? g.remaining > 0 : true) && g.spend===0);
+
+    const availableLine = availableGroups.length
+      ? availableGroups.map(g=>`${g.label} (${g.remaining===null ? 'còn ưu đãi' : 'còn ' + fmt(g.remaining)})`).join(' · ')
+      : 'Không còn nhóm nào còn trần để ưu tiên thêm.';
+
+    const activeHtml = activeGroups.length ? activeGroups.map(g=>{
+      const statusText = g.cap && g.remaining===0 && (g.earned>0 || g.spend>0)
+        ? '<span class="rewardPill" style="color:#b91c1c">Hết hạn mức hoàn</span>'
+        : (g.gap>0
+          ? '<span class="rewardPill" style="color:#b7791f">Chưa mở hoàn</span>'
+          : '<span class="rewardPill" style="color:#12805c">Đang còn hoàn</span>');
+      const gapTextLine = g.gap>0 ? `<div class="bad"><b>Cần chi thêm để mở hoàn:</b> ${fmt(g.gap)}</div>` : '';
+      return `<div class="rewardGroup">
+        <div><b>${g.label}</b> ${statusText}</div>
+        <div>Chi tiêu nhóm này: <b>${fmt(g.spend)}</b></div>
+        <div>Đã hoàn ước tính: <b>${fmt(g.earned)}</b> · Còn trần: <b>${g.remaining===null?'—':fmt(g.remaining)}</b></div>
+        ${gapTextLine}
+        ${g.note ? `<div class="mini">${g.note}</div>` : ''}
+      </div>`;
+    }).join('') : '<div class="rewardGroup">Chưa phát sinh nhóm nào để nhận hoàn trên thẻ này.</div>';
+
+    const canUseHtml = unusedAvailable.length ? unusedAvailable.map(g=>{
+      const openText = g.gap>0 ? `Cần đủ thêm ${fmt(g.gap)} DSCT để mở hoàn.` : 'Có thể dùng tiếp ngay.';
+      return `<div class="rewardGroup">
+        <div><b>${g.label}</b> <span class="rewardPill" style="color:#2563eb">Có thể dùng</span></div>
+        <div>Còn trần: <b>${g.remaining===null ? '—' : fmt(g.remaining)}</b></div>
+        <div>${openText}</div>
+        ${g.note ? `<div class="mini">${g.note}</div>` : ''}
+      </div>`;
+    }).join('') : '<div class="rewardGroup">Không còn nhóm mới nào nổi bật để ưu tiên thêm trên thẻ này.</div>';
+
+    return `<div class="rewardRow">
+      <div class="rewardHeader">
+        <div>
+          <div class="cardTitleRow">${renderBankLogo(s.card)}<div class="cardName">${escapeHtml(s.card.name)}</div></div>
+          <div class="cardMeta">${s.note}</div>
+          <div class="tags">${status}</div>
+        </div>
+        <div class="benefit">${fmt(s.earned)}</div>
+      </div>
+      <div class="rewardGrid">
+        <div class="rewardCell"><b>Đã chi tiêu</b><span>${fmt(s.totalSpend)}</span></div>
+        <div class="rewardCell"><b>Đã hoàn ước tính</b><span>${fmt(s.earned)}</span></div>
+        <div class="rewardCell"><b>Còn trần ước tính</b><span>${fmt(s.remaining)}</span></div>
+        <div class="rewardCell"><b>Nếu đủ điều kiện</b><span>${fmt(s.potential)}</span></div>
+      </div>
+
+      <div class="rewardSectionTitle">Nhóm đang phát sinh / đã ăn hoàn</div>
+      ${activeHtml}
+
+      <div class="rewardSectionTitle">Nhóm còn có thể hoàn để ưu tiên xài tiếp</div>
+      <div class="mini" style="margin-top:6px">${availableLine}</div>
+      ${canUseHtml}
+    </div>`;
+  }).join('');
+}
+
+
+
+function monthKeyFromDate(dateStr){
+  return String(dateStr || '').slice(0,7);
+}
+
+function setOverviewMonthDefault(){
+  if($('overviewMonth') && !$('overviewMonth').value) $('overviewMonth').value = todayLocal().slice(0,7);
+}
+
+function getCardName(cardId){
+  const card = cards.find(c=>c.id===cardId);
+  return card ? card.name : (cardId || 'Không rõ thẻ');
+}
+
+function renderOverview(){
+  if(!$('overviewSummary')) return;
+  setOverviewMonthDefault();
+  const month = $('overviewMonth').value || todayLocal().slice(0,7);
+  const monthExpenses = expenses.filter(e=>monthKeyFromDate(e.date) === month);
+  const personalExpenses = monthExpenses.filter(e=>!e.loanId);
+  const loanExpenses = monthExpenses.filter(e=>e.loanId);
+  const monthLoans = loanRecords.filter(x=>monthKeyFromDate(x.date) === month);
+
+  const totalMonthSpend = monthExpenses.reduce((s,e)=>s + (Number(e.amount)||0),0);
+  const personalSpend = personalExpenses.reduce((s,e)=>s + (Number(e.amount)||0),0);
+  const lentThisMonth = monthLoans.reduce((s,x)=>s + (Number(x.amount)||0),0) || loanExpenses.reduce((s,e)=>s + (Number(e.amount)||0),0);
+  const totalDebt = cards.reduce((s,c)=>s + (Number(settings.cardLimits?.[c.id]?.used)||0),0);
+  const totalLoanOutstanding = loanRecords.reduce((s,x)=>s + Math.max(0,(Number(x.amount)||0) - (Number(x.amountPaid)||0)),0);
+  const paidBackThisMonth = loanRecords.reduce((sum,x)=>sum + (Array.isArray(x.payments) ? x.payments : []).filter(p=>monthKeyFromDate(p.date) === month).reduce((s,p)=>s + (Number(p.amount)||0),0),0);
+
+  $('overviewSummary').innerHTML = `
+    <div class="overviewMetric"><b>Tổng chi tháng này</b><span>${fmt(totalMonthSpend)}</span><small>Gồm chi tiêu cá nhân và khoản cho mượn đã quẹt bằng thẻ.</small></div>
+    <div class="overviewMetric good"><b>Chi tiêu cá nhân</b><span>${fmt(personalSpend)}</span><small>Không tính các giao dịch gắn với khoản cho mượn thẻ.</small></div>
+    <div class="overviewMetric warn"><b>Cho mượn tháng này</b><span>${fmt(lentThisMonth)}</span><small>Các khoản đã quẹt hộ/người khác nhờ thanh toán.</small></div>
+    <div class="overviewMetric bad"><b>Phải trả thẻ hiện tại</b><span>${fmt(totalDebt)}</span><small>Lấy từ dư nợ/đã dùng trong Cài đặt thẻ.</small></div>
+    <div class="overviewMetric warn"><b>Còn phải thu</b><span>${fmt(totalLoanOutstanding)}</span><small>Tổng tiền người mượn chưa chuyển lại.</small></div>
+    <div class="overviewMetric good"><b>Đã thu tháng này</b><span>${fmt(paidBackThisMonth)}</span><small>Tiền người mượn đã trả trong tháng đang xem.</small></div>
+  `;
+
+  const debtRows = cards
+    .map(c=>({card:c, debt:Number(settings.cardLimits?.[c.id]?.used)||0, limit:Number(settings.cardLimits?.[c.id]?.limit)||0}))
+    .filter(x=>x.debt>0)
+    .sort((a,b)=>b.debt-a.debt);
+  $('overviewCardDebt').innerHTML = debtRows.length ? debtRows.map(x=>{
+    const ratio = x.limit ? Math.round(x.debt / x.limit * 100) : null;
+    return `<div class="overviewItem important">
+      <div><div class="cardTitleRow">${renderBankLogo(x.card,'sm')}<strong>${escapeHtml(x.card.name)}</strong></div><div class="subline">${x.limit ? 'Hạn mức ' + fmt(x.limit) + ' · đã dùng khoảng ' + ratio + '%' : 'Chưa nhập hạn mức'}</div></div>
+      <div class="amount">${fmt(x.debt)}</div>
+    </div>`;
+  }).join('') : '<div class="empty">Chưa có dư nợ phải trả. Vào Cài đặt thẻ để nhập “Đã dùng / dư nợ hiện tại”.</div>';
+
+  const spendRows = cards
+    .map(c=>{
+      const rows = monthExpenses.filter(e=>e.cardId===c.id);
+      const total = rows.reduce((s,e)=>s+(Number(e.amount)||0),0);
+      const lent = rows.filter(e=>e.loanId).reduce((s,e)=>s+(Number(e.amount)||0),0);
+      return {card:c,total,lent,count:rows.length};
+    })
+    .filter(x=>x.total>0)
+    .sort((a,b)=>b.total-a.total);
+  $('overviewCardSpend').innerHTML = spendRows.length ? spendRows.map(x=>`<div class="overviewItem">
+    <div><div class="cardTitleRow">${renderBankLogo(x.card,'sm')}<strong>${escapeHtml(x.card.name)}</strong></div><div class="subline">${x.count} giao dịch${x.lent ? ' · trong đó cho mượn ' + fmt(x.lent) : ''}</div></div>
+    <div class="amount">${fmt(x.total)}</div>
+  </div>`).join('') : '<div class="empty">Tháng này chưa lưu chi tiêu nào theo thẻ.</div>';
+
+  const borrowerRows = Object.values(loanRecords.reduce((acc,x)=>{
+    const key = String(x.borrower || 'Không rõ').trim() || 'Không rõ';
+    if(!acc[key]) acc[key] = {name:key,total:0,paid:0,remaining:0,count:0,monthAmount:0};
+    const amount = Number(x.amount)||0;
+    const paid = Number(x.amountPaid)||0;
+    acc[key].total += amount;
+    acc[key].paid += paid;
+    acc[key].remaining += Math.max(0, amount-paid);
+    acc[key].count += 1;
+    if(monthKeyFromDate(x.date) === month) acc[key].monthAmount += amount;
+    return acc;
+  },{})).sort((a,b)=>b.remaining-a.remaining || b.monthAmount-a.monthAmount);
+  $('overviewLoanList').innerHTML = borrowerRows.length ? borrowerRows.map(x=>`<div class="overviewItem ${x.remaining>0?'important':'moneyIn'}">
+    <div><strong>${escapeHtml(x.name)}</strong><div class="subline">${x.count} khoản · tháng này mượn ${fmt(x.monthAmount)} · đã trả ${fmt(x.paid)}</div></div>
+    <div class="amount">${x.remaining>0 ? 'Còn ' + fmt(x.remaining) : 'Đã thu đủ'}</div>
+  </div>`).join('') : '<div class="empty">Chưa có khoản cho mượn thẻ nào.</div>';
+
+  const categoryLabels = {
+    online:'Online chung', ecommerce:'TMĐT', shopee:'Shopee', shopeefood:'ShopeeFood', lazada:'Lazada', tiktok:'TikTok Shop',
+    dining:'Ăn uống', supermarket:'Siêu thị', fashion:'Thời trang', travel:'Du lịch', airline:'Vé máy bay', vietjet:'Vietjet',
+    transport:'Di chuyển', entertainment:'Giải trí', education:'Giáo dục', insurance:'Bảo hiểm', health:'Sức khỏe', museum:'Bảo tàng',
+    convenience:'Cửa hàng tiện lợi', hotel:'Khách sạn', professional_ewallet:'Dịch vụ/ví điện tử', cinema:'Rạp phim', other:'Khác'
+  };
+  const catRows = Object.entries(monthExpenses.reduce((acc,e)=>{
+    const key = e.category || 'other';
+    if(!acc[key]) acc[key] = {key,total:0,count:0};
+    acc[key].total += Number(e.amount)||0;
+    acc[key].count += 1;
+    return acc;
+  },{})).map(([key,v])=>v).sort((a,b)=>b.total-a.total);
+  $('overviewCategoryList').innerHTML = catRows.length ? catRows.map(x=>`<div class="overviewItem">
+    <div><strong>${escapeHtml(categoryLabels[x.key] || x.key)}</strong><div class="subline">${x.count} giao dịch trong tháng</div></div>
+    <div class="amount">${fmt(x.total)}</div>
+  </div>`).join('') : '<div class="empty">Chưa có dữ liệu nhóm chi tiêu trong tháng này.</div>';
+}
+
+function normalizeImportedSettings(raw){
+  const merged = {...structuredClone(defaults), ...(raw || {})};
+  merged.owned = {...structuredClone(defaults.owned), ...(raw?.owned || {})};
+  merged.cardLimits = {...structuredClone(defaults.cardLimits), ...(raw?.cardLimits || {})};
+  merged.paymentRules = {...structuredClone(defaults.paymentRules), ...(raw?.paymentRules || {})};
+  cards.forEach(c=>{
+    if(merged.owned[c.id] === undefined) merged.owned[c.id] = true;
+    merged.cardLimits[c.id] = merged.cardLimits[c.id] || {limit:0,used:0};
+    merged.paymentRules[c.id] = merged.paymentRules[c.id] || {statementDay:20,dueDays:15,remindBefore:3,paid:false};
+  });
+  return merged;
+}
+
+function exportBackupData(){
+  saveSettings();
+  const payload = {
+    app:'Card Optimizer VN',
+    version:'iphone-ui-backup-v1',
+    exportedAt:new Date().toISOString(),
+    settings,
+    expenses,
+    loanRecords
+  };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `card-optimizer-backup-${todayLocal()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1200);
+  if($('backupStatus')) $('backupStatus').innerHTML = `Đã xuất file backup ngày <b>${todayLocal()}</b>. Lưu file này vào iCloud Drive/Files để nhập lại khi cần.`;
+}
+
+function importBackupData(){
+  const input = $('backupImportFile');
+  const file = input?.files && input.files[0];
+  if(!file){ alert('Chọn file backup JSON trước má.'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const data = JSON.parse(e.target.result || '{}');
+      const importedSettings = normalizeImportedSettings(data.settings || data.co_settings || {});
+      const importedExpenses = Array.isArray(data.expenses) ? data.expenses : (Array.isArray(data.co_expenses) ? data.co_expenses : []);
+      const importedLoans = Array.isArray(data.loanRecords) ? data.loanRecords : (Array.isArray(data.loans) ? data.loans : (Array.isArray(data.co_loans) ? data.co_loans : []));
+      if(!confirm(`Nhập backup này sẽ thay dữ liệu hiện tại bằng ${importedExpenses.length} chi tiêu và ${importedLoans.length} khoản mượn thẻ. Tiếp tục?`)) return;
+      settings = importedSettings;
+      expenses = importedExpenses;
+      loanRecords = importedLoans.map(x=>({
+        ...x,
+        amountPaid: Number(x.amountPaid || (x.paid ? x.amount : 0)) || 0,
+        payments: Array.isArray(x.payments) ? x.payments : []
+      }));
+      localStorage.setItem('co_settings', JSON.stringify(settings));
+      localStorage.setItem('co_expenses', JSON.stringify(expenses));
+      localStorage.setItem('co_loans', JSON.stringify(loanRecords));
+      loadSettingsUI(); renderExpenses(); renderRewards(); renderLoans(); renderReminders(); renderCards(); renderOverview();
+      if($('backupStatus')) $('backupStatus').innerHTML = `Đã nhập backup: <b>${expenses.length}</b> chi tiêu, <b>${loanRecords.length}</b> khoản mượn thẻ.`;
+      alert('Đã nhập backup xong.');
+    }catch(err){
+      console.error(err);
+      alert('File backup không đọc được hoặc sai định dạng JSON.');
+      if($('backupStatus')) $('backupStatus').innerHTML = 'Nhập backup lỗi. Kiểm tra đúng file JSON đã xuất từ app.';
+    }
+  };
+  reader.readAsText(file);
+}
+
+
+document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['result','overview','expenses','rewards','loans','reminders','settings','cards','about'].forEach(t=>$('tab-'+t).classList.toggle('hidden', t!==btn.dataset.tab));
+}));
+$('calcBtn').addEventListener('click',calc);
+$('refreshOverview').addEventListener('click',renderOverview);
+$('refreshRewards').addEventListener('click',renderRewards);
+$('demoBtn').addEventListener('click',demo);
+$('ocrExpense').addEventListener('click',runExpenseOCR);
+$('saveExpense').addEventListener('click',saveExpenseRecord);
+$('clearExpenses').addEventListener('click',clearExpenseHistory);
+$('useExpenseForCalc').addEventListener('click',useLastExpenseForCalc);
+$('ocrLoan').addEventListener('click',runLoanOCR);
+$('saveLoan').addEventListener('click',saveLoanRecord);
+$('clearLoans').addEventListener('click',clearLoanHistory);
+$('applyBulkPayment').addEventListener('click',applyBulkPayment);
+$('showBorrowerHistory').addEventListener('click',()=>showBorrowerHistory());
+$('refreshReminders').addEventListener('click',renderReminders);
+$('downloadIcs').addEventListener('click',downloadICS);
+$('browserNotify').addEventListener('click',enableBrowserNotify);
+$('saveSettings').addEventListener('click',()=>{saveSettings(); alert('Đã lưu cài đặt');});
+$('resetSettings').addEventListener('click',()=>{localStorage.removeItem('co_settings'); settings=structuredClone(defaults); loadSettingsUI();});
+$('enableAllCards').addEventListener('click',enableAllCards);
+$('exportBackup').addEventListener('click',exportBackupData);
+$('importBackup').addEventListener('click',importBackupData);
+loadSettingsUI(); setupMoneyInputs(); renderCards(); setToday(); setExpenseToday(); setLoanToday(); setRewardMonthDefault(); setOverviewMonthDefault(); renderExpenses(); renderRewards(); renderLoans(); renderReminders(); renderOverview();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>
