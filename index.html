@@ -489,7 +489,7 @@
           <button class="secondary" id="clearExpenses">Xóa lịch sử</button>
         </div>
         <div id="ocrStatus" class="note" style="margin-top:6px">
-          OCR dùng Tesseract.js. Bản này đọc nhiều kiểu bill hơn: ăn uống, siêu thị, Grab/ShopeeFood, TMĐT, điện/nước/internet, vé máy bay/xe, khách sạn, bill POS/chuyển khoản. Má vẫn nên kiểm tra lại số tiền trước khi lưu.
+          OCR dùng Tesseract.js. Bản này đọc nhiều kiểu bill hơn, có thêm chế độ bill giấy nhà hàng/POS: tự crop tờ giấy trắng, thử xoay nhẹ, đọc riêng cuối bill và cột tiền bên phải. Má vẫn nên kiểm tra lại số tiền trước khi lưu.
         </div>
         <label>Kết quả OCR thô</label>
         <textarea id="ocrText" rows="7" style="width:100%;border:1px solid #d9dfec;border-radius:12px;padding:12px;font-size:13px;line-height:1.4" placeholder="Kết quả OCR sẽ hiện ở đây để đối chiếu..."></textarea>
@@ -1295,6 +1295,116 @@ function capRewardWithHistory(cardId, ctx, categories, rate, cap){
   const rawCurrent = ctx.amount * rate;
   const reward = Math.min(rawCurrent, remaining);
   return {used, remaining, rawCurrent, reward, cap, rate};
+}
+
+
+function vibSuperExpenseBucket(obj){
+  const mcc = String(obj.mcc || '').trim();
+  const merchant = stripVietnamese(obj.merchant || '');
+  const merchantCat = obj.merchantCat || inferMerchantCat(obj.merchant || '');
+  const mccCat = obj.mccCat || inferMccCat(mcc);
+  const ctx = {...obj, mcc, merchantCat, mccCat};
+  const cat = effectiveCategory(ctx);
+  const channel = obj.channel || '';
+  const isForeign = obj.foreign === true || obj.foreign === 'yes' || obj.foreign === 'true' || cat === 'foreign';
+
+  if(isForeign) return {key:'foreign', rate:.15, pick:'Giao dịch nước ngoài', label:'Giao dịch nước ngoài 15%'};
+  if(cat === 'dining' || mccCat === 'dining') return {key:'dining', rate:.10, pick:'Ẩm thực', label:'Ẩm thực 10%'};
+  if(['travel','hotel','airline','vietjet'].includes(cat) || ['travel','hotel','airline'].includes(mccCat) || /vietjet|hotel|khach san|booking|agoda|travel|airline|airlines|tour/.test(merchant)){
+    return {key:'travel', rate:.10, pick:'Du lịch', label:'Du lịch 10%'};
+  }
+  if(!blocksGenericOnline(ctx) && (channel === 'online' || ['online','ecommerce','shopee','shopeefood','lazada','tiktok'].includes(cat) || /shopee|lazada|tiktok|tiki|sendo/.test(merchant))){
+    return {key:'online', rate:.05, pick:'Giao dịch trực tuyến', label:'Giao dịch trực tuyến 5%'};
+  }
+  if(['shopping','fashion','supermarket','convenience'].includes(cat) || ['fashion','supermarket','convenience'].includes(mccCat) || /dien\s*may|dienmayxanh|the gioi di dong|tgdd|nguyen kim|cellphones|fpt shop|uniqlo|zara|hm|winmart|coopmart|lotte mart|go!|big c/.test(merchant)){
+    return {key:'shopping', rate:.10, pick:'Mua sắm', label:'Mua sắm 10%'};
+  }
+  return {key:'other', rate:.001, pick:'Giao dịch khác', label:'Giao dịch khác 0,1%'};
+}
+
+function vibSuperCtxBucket(ctx){
+  return vibSuperExpenseBucket(ctx || {});
+}
+
+function vibSuperHistoryUsage(cardId, txDate){
+  const totalCap = 1000000;
+  const categoryCap = 500000;
+  const buckets = {};
+  getCardHistoryExpenses(cardId, txDate).forEach(e=>{
+    const bucket = vibSuperExpenseBucket(e);
+    if(bucket.key === 'other') return;
+    const b = buckets[bucket.key] || {key:bucket.key, label:bucket.label, pick:bucket.pick, rate:bucket.rate, spend:0, raw:0, earned:0};
+    const amt = Number(e.amount) || 0;
+    b.spend += amt;
+    b.raw += amt * bucket.rate;
+    b.earned = Math.min(b.raw, categoryCap);
+    buckets[bucket.key] = b;
+  });
+  const totalBeforeCap = Object.values(buckets).reduce((s,b)=>s+(Number(b.earned)||0),0);
+  const totalUsed = Math.min(totalBeforeCap, totalCap);
+  return {buckets, totalCap, categoryCap, totalBeforeCap, totalUsed, totalRemaining:Math.max(0, totalCap-totalUsed)};
+}
+
+function vibSuperCapText(info){
+  if(!info) return '';
+  const catUsed = Number(info.categoryUsed) || 0;
+  const catRemaining = Number(info.categoryRemaining) || 0;
+  const totalCap = Number(info.totalCap) || 1000000;
+  const totalUsed = Number(info.totalUsed) || 0;
+  const totalRemaining = Number(info.totalRemaining) || 0;
+  const reward = Number(info.reward) || 0;
+  const afterCatRemaining = Math.max(0, catRemaining - reward);
+  const afterTotalRemaining = Math.max(0, totalRemaining - reward);
+  const danger = totalRemaining <= 0 || catRemaining <= 0 || reward >= totalRemaining || reward >= catRemaining;
+  if(totalRemaining <= 0){
+    return `<div class="thresholdAlert" style="color:#b91c1c">
+      <div><b>VIB Super Card đã hết trần tổng.</b></div>
+      <div><b>Trần tổng/kỳ:</b> ${fmt(totalCap)}</div>
+      <div><b>Đã dùng từ lịch sử:</b> ${fmt(totalUsed)}</div>
+      <div><b>Giao dịch này:</b> không còn trần để hoàn thêm.</div>
+    </div>`;
+  }
+  if(catRemaining <= 0){
+    return `<div class="thresholdAlert" style="color:#b91c1c">
+      <div><b>Danh mục này đã hết trần hoàn.</b></div>
+      <div><b>Đã dùng danh mục:</b> ${fmt(catUsed)}</div>
+      <div><b>Trần danh mục:</b> ${fmt(500000)}</div>
+      <div><b>Còn trần tổng của thẻ:</b> ${fmt(totalRemaining)}</div>
+    </div>`;
+  }
+  return `<div class="thresholdAlert" style="color:${danger ? '#b91c1c' : '#12805c'}">
+    <div><b>Trần danh mục VIB Super:</b> ${fmt(500000)}</div>
+    <div><b>Đã dùng danh mục từ lịch sử:</b> ${fmt(catUsed)}</div>
+    <div><b>Còn trần danh mục trước giao dịch:</b> ${fmt(catRemaining)}</div>
+    <div><b>Trần tổng/kỳ của toàn thẻ:</b> ${fmt(totalCap)}</div>
+    <div><b>Đã dùng tổng từ lịch sử:</b> ${fmt(totalUsed)}</div>
+    <div><b>Còn trần tổng trước giao dịch:</b> ${fmt(totalRemaining)}</div>
+    <div><b>Ước tính hoàn giao dịch này:</b> ${fmt(reward)}</div>
+    <div><b>Còn trần danh mục sau giao dịch:</b> ${fmt(afterCatRemaining)}</div>
+    <div><b>Còn trần tổng sau giao dịch:</b> ${fmt(afterTotalRemaining)}</div>
+  </div>`;
+}
+
+function applyVibSuperTotalCap(groups){
+  const totalCap = 1000000;
+  let used = 0;
+  groups.forEach(g=>{
+    const before = Number(g.earned) || 0;
+    const allow = Math.max(0, totalCap - used);
+    const adjusted = Math.min(before, allow);
+    g.earned = adjusted;
+    used += adjusted;
+    if(g.cap){
+      const categoryLeft = Math.max(0, g.cap - adjusted);
+      g.remaining = Math.min(categoryLeft, Math.max(0, totalCap - used));
+    } else {
+      g.remaining = Math.max(0, totalCap - used);
+    }
+    if(before > adjusted){
+      g.note = `${g.note || ''}${g.note ? ' ' : ''}Bị giới hạn bởi trần tổng VIB Super Card ${fmt(totalCap)}/kỳ.`;
+    }
+  });
+  return Math.max(0, totalCap - used);
 }
 
 function capTextWithHistory(info){
@@ -2187,50 +2297,59 @@ function renderGroupedResults(rows){
 }
 
 function calc(){
-  flushActiveInput();
-  saveSettings();
-  document.querySelector('[data-tab="result"]')?.click();
-  const ctx = getCurrentCalcContext();
-  lastCalcContext = null;
-  lastCalcSignature = '';
-  resultDirty = false;
-  if(!ctx.amount){ $('results').innerHTML='<div class="empty">Nhập số tiền giao dịch trước má.</div>'; return; }
-  $('results').innerHTML = '<div class="empty">Đang tính lại giao dịch mới...</div>';
-  lastCalcContext = ctx;
-  lastCalcSignature = calcSignature(ctx);
-  const rows = cards.filter(c=>settings.owned[c.id]).map(c=>evaluate(c,ctx)).sort((a,b)=>resultScore(b)-resultScore(a) || (Number(b.reward)||0)-(Number(a.reward)||0));
-  if(!rows.length){ $('results').innerHTML='<div class="empty">Chưa bật thẻ nào trong Cài đặt thẻ. Bật ít nhất 1 thẻ rồi tính lại má.</div>'; return; }
-  rows.forEach((r,i)=>r.rank=i+1);
-  const bestGoodForAlt = rows.find(r=>resultGroupKey(r)==='good' && (Number(r.reward)||0) > 0);
-  rows.forEach(r=>{
-    if(bestGoodForAlt && r.card.id !== bestGoodForAlt.card.id && resultHasMissingThreshold(r)){
-      r.altCardName = bestGoodForAlt.card.name;
-      r.altReward = bestGoodForAlt.reward;
-    }
-  });
-  const best = rows[0];
-  const bestGood = rows.find(r=>resultGroupKey(r)==='good' && (Number(r.reward)||0) > 0);
-  const usableBest = bestGood || best;
-  const noPositiveReward = !bestGood;
-  const bestLabel = noPositiveReward ? 'Không thấy thẻ có hoàn chắc chắn' : (usableBest === best ? resultRankLabel(best) : 'Gợi ý dùng ngay tốt nhất');
-  const html = `
-    <div class="resultTop">
-      <div class="winner ${noPositiveReward ? 'needThreshold' : ''}">
-        <div class="rank ${resultHasMissingThreshold(usableBest)||noPositiveReward?'warnRank':''}">${bestLabel}</div>
-        ${noPositiveReward && isHardExcludedBill(ctx) ? `<h3>Không nên tính là Online chung</h3>` : `<div class="winnerTitleRow">${renderBankLogo(usableBest.card,'lg')}<h3>${escapeHtml(usableBest.card.name)}</h3></div>`}
-        <div class="money ${resultHasMissingThreshold(usableBest)||noPositiveReward?'potential':''}">${noPositiveReward ? '0đ' : resultAmountText(usableBest)}</div>
-        ${noPositiveReward && isHardExcludedBill(ctx) ? `<div class="notePanels"><div class="notePanel historyPanel"><div class="notePanelTitle">Cảnh báo nhận diện</div><div class="cardMeta">Merchant này được nhận diện là ${labelCategory(ctx.effectiveCat)}. App đã chặn tính hoàn online để tránh gợi ý sai.</div></div></div>` : renderNotePanels(usableBest.note)}
-      </div>
-      <div class="note">Điều kiện DSCT đang xét theo: <b>${ctx.thresholdLabel}</b>${ctx.manualSpend ? ` · DSCT cộng thêm thủ công: <b>${fmt(ctx.manualSpend)}</b>` : ''}${ctx.spendMode==='optimistic' ? ' · Chế độ này chỉ tham khảo, không xếp là chắc chắn.' : ''}. App tự cộng lịch sử chi tiêu đã lưu của từng thẻ, gồm cả khoản cho mượn thẻ.</div>
-      ${blocksGenericOnline(ctx) ? `<div class="note warn"><b>App nhận diện merchant là ${labelCategory(ctx.effectiveCat)}.</b> Dù kênh thanh toán là online, app không tính như “Online chung” để tránh gợi ý sai hoàn tiền cho hóa đơn điện/nước/viễn thông/xăng dầu.</div>` : ''}
-      <div class="note">Sinh nhật: <b>${ctx.birthday ? 'Đang trong tháng sinh nhật' : 'Không áp dụng'}</b>${settings.personalBirthday ? ` · Ngày sinh đã lưu: ${settings.personalBirthday}` : ' · Chưa nhập ngày sinh trong Cài đặt'}</div>
-      <div class="note"><b>Cách đọc kết quả:</b> mở nhóm <b>Nên dùng ngay</b> trước. Nhóm màu vàng là thẻ có ưu đãi cao nhưng còn thiếu DSCT hoặc điều kiện, không nên xem là chắc chắn.</div>
-      ${renderGroupedResults(rows)}
+  try{
+    flushActiveInput();
+      saveSettings();
+      document.querySelector('[data-tab="result"]')?.click();
+      const ctx = getCurrentCalcContext();
+      lastCalcContext = null;
+      lastCalcSignature = '';
+      resultDirty = false;
+      if(!ctx.amount){ $('results').innerHTML='<div class="empty">Nhập số tiền giao dịch trước má.</div>'; return; }
+      $('results').innerHTML = '<div class="empty">Đang tính lại giao dịch mới...</div>';
+      lastCalcContext = ctx;
+      lastCalcSignature = calcSignature(ctx);
+      const rows = cards.filter(c=>settings.owned[c.id]).map(c=>evaluate(c,ctx)).sort((a,b)=>resultScore(b)-resultScore(a) || (Number(b.reward)||0)-(Number(a.reward)||0));
+      if(!rows.length){ $('results').innerHTML='<div class="empty">Chưa bật thẻ nào trong Cài đặt thẻ. Bật ít nhất 1 thẻ rồi tính lại má.</div>'; return; }
+      rows.forEach((r,i)=>r.rank=i+1);
+      const bestGoodForAlt = rows.find(r=>resultGroupKey(r)==='good' && (Number(r.reward)||0) > 0);
+      rows.forEach(r=>{
+        if(bestGoodForAlt && r.card.id !== bestGoodForAlt.card.id && resultHasMissingThreshold(r)){
+          r.altCardName = bestGoodForAlt.card.name;
+          r.altReward = bestGoodForAlt.reward;
+        }
+      });
+      const best = rows[0];
+      const bestGood = rows.find(r=>resultGroupKey(r)==='good' && (Number(r.reward)||0) > 0);
+      const usableBest = bestGood || best;
+      const noPositiveReward = !bestGood;
+      const bestLabel = noPositiveReward ? 'Không thấy thẻ có hoàn chắc chắn' : (usableBest === best ? resultRankLabel(best) : 'Gợi ý dùng ngay tốt nhất');
+      const html = `
+        <div class="resultTop">
+          <div class="winner ${noPositiveReward ? 'needThreshold' : ''}">
+            <div class="rank ${resultHasMissingThreshold(usableBest)||noPositiveReward?'warnRank':''}">${bestLabel}</div>
+            ${noPositiveReward && isHardExcludedBill(ctx) ? `<h3>Không nên tính là Online chung</h3>` : `<div class="winnerTitleRow">${renderBankLogo(usableBest.card,'lg')}<h3>${escapeHtml(usableBest.card.name)}</h3></div>`}
+            <div class="money ${resultHasMissingThreshold(usableBest)||noPositiveReward?'potential':''}">${noPositiveReward ? '0đ' : resultAmountText(usableBest)}</div>
+            ${noPositiveReward && isHardExcludedBill(ctx) ? `<div class="notePanels"><div class="notePanel historyPanel"><div class="notePanelTitle">Cảnh báo nhận diện</div><div class="cardMeta">Merchant này được nhận diện là ${labelCategory(ctx.effectiveCat)}. App đã chặn tính hoàn online để tránh gợi ý sai.</div></div></div>` : renderNotePanels(usableBest.note)}
+          </div>
+          <div class="note">Điều kiện DSCT đang xét theo: <b>${ctx.thresholdLabel}</b>${ctx.manualSpend ? ` · DSCT cộng thêm thủ công: <b>${fmt(ctx.manualSpend)}</b>` : ''}${ctx.spendMode==='optimistic' ? ' · Chế độ này chỉ tham khảo, không xếp là chắc chắn.' : ''}. App tự cộng lịch sử chi tiêu đã lưu của từng thẻ, gồm cả khoản cho mượn thẻ.</div>
+          ${blocksGenericOnline(ctx) ? `<div class="note warn"><b>App nhận diện merchant là ${labelCategory(ctx.effectiveCat)}.</b> Dù kênh thanh toán là online, app không tính như “Online chung” để tránh gợi ý sai hoàn tiền cho hóa đơn điện/nước/viễn thông/xăng dầu.</div>` : ''}
+          <div class="note">Sinh nhật: <b>${ctx.birthday ? 'Đang trong tháng sinh nhật' : 'Không áp dụng'}</b>${settings.personalBirthday ? ` · Ngày sinh đã lưu: ${settings.personalBirthday}` : ' · Chưa nhập ngày sinh trong Cài đặt'}</div>
+          <div class="note"><b>Cách đọc kết quả:</b> mở nhóm <b>Nên dùng ngay</b> trước. Nhóm màu vàng là thẻ có ưu đãi cao nhưng còn thiếu DSCT hoặc điều kiện, không nên xem là chắc chắn.</div>
+          ${renderGroupedResults(rows)}
+        </div>`;
+      $('results').innerHTML = html;
+      compactifyResultNotes();
+  }catch(err){
+    console.error('calc error', err);
+    const message = err && (err.message || err.toString()) ? (err.message || err.toString()) : 'Không rõ lỗi';
+    $('results').innerHTML = `<div class="empty" style="color:#b91c1c;text-align:left">
+      <b>App bị lỗi khi tính giao dịch này.</b><br/>
+      Lỗi: ${escapeHtml(message)}<br/>
+      Má thử bấm lại, hoặc đổi nhóm chi tiêu/MCC. Mình đã chặn không để app đứng ở màn “Đang tính lại...”.
     </div>`;
-  $('results').innerHTML = html;
-  compactifyResultNotes();
+  }
 }
-
 
 
 function renderNotePanels(noteHtml, opts={}){
@@ -2382,11 +2501,6 @@ function parseOcrAmountToken(raw){
   if(!s) return 0;
   const digits = s.replace(/[^\d]/g,'');
   if(!digits) return 0;
-
-  // 20.000 / 20,000 / 1 200 000 => VND integer
-  if(/[.,\s]/.test(raw) || digits.length >= 4){
-    return (negative ? -1 : 1) * Number(digits);
-  }
   return (negative ? -1 : 1) * Number(digits);
 }
 
@@ -2397,22 +2511,26 @@ function parseMoneyText(s){
   const candidates = [];
 
   const amountRegex = /(-?\s*(?:\d{1,3}(?:[\.,\s]\d{3})+|\d{4,10})(?:[\.,]\d{2})?)(?:\s*(?:đ|d|vnd|vnđ|₫))?/gi;
-
   const strongTotal = [
-    'tong cong','can thanh toan','so tien thanh toan','thanh tien','tong tien','tong thanh toan',
-    'da thanh toan','so tien da tra','khach da tra','paid amount','amount paid','total payment',
-    'grand total','order total','payment total','charged','total due','amount due','you paid',
-    'tong don hang','tong tien hang'
+    'tong cong','can thanh toan','phai thanh toan','thanh toan','so tien thanh toan','thanh tien',
+    'tong tien','tong thanh toan','da thanh toan','so tien da tra','khach da tra','paid amount',
+    'amount paid','total payment','grand total','order total','payment total','charged','total due',
+    'amount due','you paid','tong don hang','tong tien hang','con lai','con phai tra','final total',
+    'net amount','tien khach tra','total amount'
   ];
+  const itemSubtotalWords = ['tong mon','tong cong mon','tong tien mon','tong hang','subtotal','tong tam tinh','tam tinh'];
   const bankTotal = ['so tien giao dich','transaction amount','amount','so tien','money transfer','chuyen khoan'];
   const weakTotal = ['total','tong'];
   const badWords = [
-    'tam tinh','tong tam tinh','subtotal','temporary','phi','fee','shipping','ship','delivery',
-    'giam','discount','voucher','khuyen mai','uu dai','cashback','refund','hoan tien',
-    'tax','vat','tip','phu thu','service charge','diem','point','xu','coin','so du','balance',
-    'han muc','limit','card','visa','mastercard','jcb','atm','ma don','order id','ma gd','transaction id'
+    'chiet khau','discount','voucher','khuyen mai','uu dai','cashback','refund','hoan tien',
+    'phi ship','shipping','delivery','tax','vat','thue','tip','phu thu','service charge',
+    'diem','point','xu','coin','so du','balance','han muc','limit','card','visa','mastercard',
+    'jcb','atm','ma don','order id','ma gd','transaction id','dat lai','reset'
   ];
   const quantityWords = ['qty','sl','so luong','don gia','unit price','x '];
+
+  const hasRestaurantWords = lines.some(o=>/nha hang|restaurant|sushi|sashimi|com|khay|set |mon|ban |phuc vu|khach hang|giam gia/.test(o.plain));
+  let maxSeen = 0;
 
   lines.forEach((obj,idx)=>{
     const line = obj.line;
@@ -2422,55 +2540,87 @@ function parseMoneyText(s){
     const prev2 = lines[idx-2]?.plain || '';
     const next2 = lines[idx+2]?.plain || '';
     const ctx = `${prev2} ${prev} ${plain} ${next} ${next2}`;
+    const own = plain;
 
     let m;
     amountRegex.lastIndex = 0;
     while((m = amountRegex.exec(line)) !== null){
       const raw = m[1] || '';
-      const n = Math.abs(parseOcrAmountToken(raw));
+      const signed = parseOcrAmountToken(raw);
+      const n = Math.abs(signed);
       if(!n || n < 1000 || n > 500000000) continue;
+      maxSeen = Math.max(maxSeen, n);
 
-      const isNegative = /^\s*-/.test(raw) || /(^|\s)-\s*\d/.test(line);
+      const isNegative = signed < 0 || /^\s*-/.test(raw) || /(^|\s)-\s*\d/.test(line);
       let score = idx * 5;
 
-      if(strongTotal.some(w=>ctx.includes(w))) score += 7000;
-      if(bankTotal.some(w=>ctx.includes(w))) score += 4500;
-      if(weakTotal.some(w=>ctx.includes(w))) score += 1500;
+      if(strongTotal.some(w=>own.includes(w))) score += 9000;
+      else if(strongTotal.some(w=>ctx.includes(w))) score += 5000;
 
-      // Tiền thường nằm bên phải hoặc gần cuối bill.
-      if(idx > lines.length * 0.55) score += 800;
-      if(idx > lines.length * 0.75) score += 1200;
+      if(bankTotal.some(w=>own.includes(w))) score += 6000;
+      else if(bankTotal.some(w=>ctx.includes(w))) score += 3500;
+
+      if(weakTotal.some(w=>own.includes(w))) score += 1800;
+      else if(weakTotal.some(w=>ctx.includes(w))) score += 800;
+
+      if(itemSubtotalWords.some(w=>own.includes(w))) score -= 1200;
+      if(badWords.some(w=>own.includes(w))) score -= 6500;
+      else if(badWords.some(w=>ctx.includes(w))) score -= 1800;
+
+      if(quantityWords.some(w=>ctx.includes(w))) score -= 900;
+      if(isNegative) score -= 8000;
       if(/(đ|vnd|₫|vnđ)\b/i.test(line)) score += 900;
 
-      if(badWords.some(w=>ctx.includes(w))) score -= 4000;
-      if(quantityWords.some(w=>ctx.includes(w))) score -= 1000;
-      if(isNegative) score -= 7000;
+      // Số tiền cuối bill thường nằm ở 25% cuối, đặc biệt bill giấy/POS.
+      if(idx > lines.length * 0.55) score += 900;
+      if(idx > lines.length * 0.75) score += 1700;
+      if(/^\s*-?\s*[\d.,\s]+\s*(đ|d|vnd|vnđ|₫)?\s*$/i.test(line) && idx > lines.length*0.55) score += 2000;
+
+      // Bill nhà hàng thường có tổng món, chiết khấu, VAT rồi số cuối cùng mới là số phải trả.
+      if(hasRestaurantWords && idx > lines.length*0.62 && n >= 50000 && !badWords.some(w=>own.includes(w))){
+        score += 3000;
+      }
+      if(hasRestaurantWords && /giam gia|chiet khau|discount|vat|thue/.test(own)){
+        score -= 6500;
+      }
+
       if(/^\d{8,}$/.test(String(n)) && !strongTotal.some(w=>ctx.includes(w)) && !bankTotal.some(w=>ctx.includes(w))) score -= 1200;
 
-      // Một dòng chỉ có số tiền ở gần cuối thường là tổng tiền.
-      if(/^\s*-?\s*[\d.,\s]+\s*(đ|d|vnd|vnđ|₫)?\s*$/i.test(line) && idx > lines.length*0.5) score += 1200;
-
-      candidates.push({n, score, raw, line, idx, ctx});
+      candidates.push({n, score, raw, line, idx, ctx, own});
     }
   });
 
-  // Nếu OCR tách nhãn và số tiền thành 2 dòng: dòng "Tổng cộng" rồi dòng "20.000đ"
+  // Nếu nhãn tổng tiền nằm một dòng, số tiền nằm 1-3 dòng sau.
   lines.forEach((obj,idx)=>{
     const p = obj.plain;
     if(strongTotal.some(w=>p.includes(w)) || bankTotal.some(w=>p.includes(w))){
       for(let j=1;j<=3;j++){
         const nextLine = lines[idx+j]?.line || '';
+        const nextPlain = lines[idx+j]?.plain || '';
         let m;
         amountRegex.lastIndex = 0;
         while((m = amountRegex.exec(nextLine)) !== null){
           const n = Math.abs(parseOcrAmountToken(m[1]));
           if(n >= 1000 && n <= 500000000){
-            candidates.push({n, score:8500 - j*200 + idx*5, raw:m[1], line:nextLine, idx:idx+j, ctx:p});
+            let score = 8800 - j*150 + idx*5;
+            if(badWords.some(w=>nextPlain.includes(w))) score -= 5000;
+            candidates.push({n, score, raw:m[1], line:nextLine, idx:idx+j, ctx:p, own:nextPlain});
           }
         }
       }
     }
   });
+
+  // Bill giấy bị che nhãn cuối: lấy số cuối cùng lớn, không nằm trên dòng chiết khấu/thuế.
+  if(hasRestaurantWords){
+    const positiveBottom = candidates
+      .filter(c=>c.n >= 50000 && c.idx > lines.length*0.55 && !/giam gia|chiet khau|discount|vat|thue|tax|phi/.test(c.own))
+      .sort((a,b)=>b.idx-a.idx);
+    if(positiveBottom.length){
+      const bottom = positiveBottom[0];
+      candidates.push({...bottom, score:bottom.score + 4500, line:bottom.line + ' [ưu tiên số cuối bill giấy]'});
+    }
+  }
 
   if(!candidates.length){
     const oneLine = normalizeOcrText(original);
@@ -2478,7 +2628,7 @@ function parseMoneyText(s){
     amountRegex.lastIndex = 0;
     while((m = amountRegex.exec(oneLine)) !== null){
       const n = Math.abs(parseOcrAmountToken(m[1]));
-      if(n >= 1000 && n <= 500000000) candidates.push({n, score:m.index, raw:m[1], line:oneLine, idx:m.index, ctx:''});
+      if(n >= 1000 && n <= 500000000) candidates.push({n, score:m.index, raw:m[1], line:oneLine, idx:m.index, ctx:'', own:''});
     }
   }
 
@@ -2520,6 +2670,7 @@ function parseMerchantText(s){
     [/mcdonald/, () => "McDonald's"],
     [/pizza hut/, () => 'Pizza Hut'],
     [/the coffee house/, () => 'The Coffee House'],
+    [/sushi|sashimi|souzai|sukiyaki|nha hang|restaurant/, () => 'Nhà hàng'],
     [/vietjet/, () => 'Vietjet Air'],
     [/vietnam airlines|vnairlines/, () => 'Vietnam Airlines'],
     [/bamboo airways/, () => 'Bamboo Airways'],
@@ -2571,6 +2722,8 @@ function inferOcrReceiptHints(text){
     set('TikTok Shop','tiktok','online');
   }else if(/befood|gofood|gojek|baemin/.test(lower)){
     set(/befood/.test(lower) ? 'beFood' : (/baemin/.test(lower) ? 'BAEMIN' : 'GoFood'), 'dining', 'online');
+  }else if(/sushi|sashimi|souzai|sukiyaki|nha hang|restaurant|khay|set |mon|com|phuc vu|khach hang/.test(lower)){
+    set(parseMerchantText(text) || 'Nhà hàng', 'dining', 'pos');
   }else if(/winmart|win mart|bach hoa xanh|coopmart|co op|lotte mart|aeon|bigc|tops market|go!/.test(lower)){
     set(parseMerchantText(text) || 'Siêu thị', 'supermarket', 'pos');
   }else if(/circle k|gs25|familymart|ministop|7-eleven|seven eleven/.test(lower)){
@@ -2606,36 +2759,92 @@ function loadImageFromFile(file){
   });
 }
 
-async function preprocessImageForOCR(file, cropMode='full', style='bw'){
+function detectPaperCrop(img){
+  const iw = img.naturalWidth || img.width;
+  const ih = img.naturalHeight || img.height;
+  const sampleW = 360;
+  const sampleH = Math.max(1, Math.round(ih * sampleW / iw));
+  const c = document.createElement('canvas');
+  c.width = sampleW; c.height = sampleH;
+  const cx = c.getContext('2d', {willReadFrequently:true});
+  cx.drawImage(img,0,0,sampleW,sampleH);
+  const data = cx.getImageData(0,0,sampleW,sampleH).data;
+  let minX=sampleW, minY=sampleH, maxX=0, maxY=0, count=0;
+  for(let y=0;y<sampleH;y++){
+    for(let x=0;x<sampleW;x++){
+      const i=(y*sampleW+x)*4;
+      const r=data[i], g=data[i+1], b=data[i+2];
+      const max=Math.max(r,g,b), min=Math.min(r,g,b);
+      const lum=0.299*r+0.587*g+0.114*b;
+      const whitePaper = lum>145 && (max-min)<80 && !(r>190 && g>120 && b<90);
+      if(whitePaper){
+        count++;
+        if(x<minX) minX=x; if(x>maxX) maxX=x;
+        if(y<minY) minY=y; if(y>maxY) maxY=y;
+      }
+    }
+  }
+  if(count < sampleW*sampleH*0.04 || maxX<=minX || maxY<=minY) return null;
+  const padX = Math.round((maxX-minX)*0.08);
+  const padY = Math.round((maxY-minY)*0.08);
+  minX=Math.max(0,minX-padX); maxX=Math.min(sampleW-1,maxX+padX);
+  minY=Math.max(0,minY-padY); maxY=Math.min(sampleH-1,maxY+padY);
+  return {
+    sx:Math.round(minX/sampleW*iw),
+    sy:Math.round(minY/sampleH*ih),
+    sw:Math.round((maxX-minX)/sampleW*iw),
+    sh:Math.round((maxY-minY)/sampleH*ih)
+  };
+}
+
+async function preprocessImageForOCR(file, cropMode='full', style='bw', rotateDeg=0){
   const img = await loadImageFromFile(file);
   const iw = img.naturalWidth || img.width;
   const ih = img.naturalHeight || img.height;
   let sx = 0, sy = 0, sw = iw, sh = ih;
-  if(cropMode === 'bottom'){
-    sy = Math.floor(ih * 0.45); sh = ih - sy;
-  }else if(cropMode === 'bottomDeep'){
-    sy = Math.floor(ih * 0.62); sh = ih - sy;
-  }else if(cropMode === 'top'){
-    sh = Math.floor(ih * 0.42);
-  }else if(cropMode === 'middle'){
-    sy = Math.floor(ih * 0.25); sh = Math.floor(ih * 0.55);
-  }else if(cropMode === 'right'){
-    sx = Math.floor(iw * 0.42); sw = iw - sx;
+
+  const paperCrop = cropMode.startsWith('paper') ? detectPaperCrop(img) : null;
+  if(paperCrop){
+    sx = paperCrop.sx; sy = paperCrop.sy; sw = paperCrop.sw; sh = paperCrop.sh;
+  }
+
+  if(cropMode === 'bottom' || cropMode === 'paperBottom'){
+    sy = Math.floor(sy + sh * 0.45); sh = Math.floor(sh * 0.55);
+  }else if(cropMode === 'bottomDeep' || cropMode === 'paperBottomDeep'){
+    sy = Math.floor(sy + sh * 0.62); sh = Math.floor(sh * 0.38);
+  }else if(cropMode === 'top' || cropMode === 'paperTop'){
+    sh = Math.floor(sh * 0.42);
+  }else if(cropMode === 'middle' || cropMode === 'paperMiddle'){
+    sy = Math.floor(sy + sh * 0.25); sh = Math.floor(sh * 0.55);
+  }else if(cropMode === 'right' || cropMode === 'paperRight'){
+    sx = Math.floor(sx + sw * 0.42); sw = Math.floor(sw * 0.58);
   }else if(cropMode === 'center'){
     sx = Math.floor(iw * 0.08); sw = Math.floor(iw * 0.84);
     sy = Math.floor(ih * 0.12); sh = Math.floor(ih * 0.76);
   }
-  const targetW = Math.min(2400, Math.max(1300, sw * 2.2));
+
+  sw = Math.max(20, Math.min(sw, iw-sx));
+  sh = Math.max(20, Math.min(sh, ih-sy));
+
+  const targetW = Math.min(2600, Math.max(1500, sw * 2.6));
   const scale = targetW / sw;
+  const rad = rotateDeg * Math.PI / 180;
+  const baseW = Math.round(sw * scale);
+  const baseH = Math.round(sh * scale);
+  const outW = Math.round(Math.abs(baseW*Math.cos(rad)) + Math.abs(baseH*Math.sin(rad)));
+  const outH = Math.round(Math.abs(baseW*Math.sin(rad)) + Math.abs(baseH*Math.cos(rad)));
+
   const canvas = document.createElement('canvas');
-  canvas.width = Math.round(sw * scale);
-  canvas.height = Math.round(sh * scale);
+  canvas.width = outW; canvas.height = outH;
   const ctx = canvas.getContext('2d', {willReadFrequently:true});
   ctx.fillStyle = '#fff';
   ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+  ctx.translate(outW/2, outH/2);
+  ctx.rotate(rad);
+  ctx.drawImage(img, sx, sy, sw, sh, -baseW/2, -baseH/2, baseW, baseH);
+  ctx.setTransform(1,0,0,1,0,0);
 
   if(style !== 'raw'){
     const data = ctx.getImageData(0,0,canvas.width,canvas.height);
@@ -2645,6 +2854,9 @@ async function preprocessImageForOCR(file, cropMode='full', style='bw'){
       let v = gray;
       if(style === 'soft'){
         v = (gray - 128) * 1.25 + 128;
+      }else if(style === 'receipt'){
+        v = (gray - 128) * 1.9 + 128;
+        v = v > 218 ? 255 : (v < 130 ? 0 : Math.max(0, Math.min(255, v)));
       }else{
         v = (gray - 128) * 1.65 + 128;
         v = v > 210 ? 255 : (v < 105 ? 0 : Math.max(0, Math.min(255, v)));
@@ -2659,26 +2871,27 @@ async function preprocessImageForOCR(file, cropMode='full', style='bw'){
 
 async function recognizeSmartOCR(file, statusEl, label='ảnh'){
   const tries = [
-    {name:'ảnh đầy đủ', crop:'full', style:'soft', psm:'6'},
-    {name:'ảnh tương phản mạnh', crop:'full', style:'bw', psm:'6'},
-    {name:'vùng tổng tiền phía dưới', crop:'bottom', style:'bw', psm:'6'},
-    {name:'vùng cuối bill', crop:'bottomDeep', style:'bw', psm:'6'},
-    {name:'cột số tiền bên phải', crop:'right', style:'bw', psm:'6'},
-    {name:'vùng giữa bill', crop:'middle', style:'soft', psm:'11'},
-    {name:'phần đầu bill/merchant', crop:'top', style:'soft', psm:'6'}
+    {name:'tờ bill giấy tự crop', crop:'paper', style:'receipt', psm:'6', rot:0},
+    {name:'tờ bill giấy xoay trái nhẹ', crop:'paper', style:'receipt', psm:'6', rot:-3},
+    {name:'tờ bill giấy xoay phải nhẹ', crop:'paper', style:'receipt', psm:'6', rot:3},
+    {name:'cuối tờ bill giấy', crop:'paperBottom', style:'receipt', psm:'6', rot:0},
+    {name:'cuối sâu tờ bill giấy', crop:'paperBottomDeep', style:'receipt', psm:'6', rot:0},
+    {name:'cột tiền bên phải của bill', crop:'paperRight', style:'receipt', psm:'6', rot:0},
+    {name:'ảnh đầy đủ', crop:'full', style:'soft', psm:'6', rot:0},
+    {name:'ảnh tương phản mạnh', crop:'full', style:'bw', psm:'6', rot:0},
+    {name:'vùng tổng tiền phía dưới', crop:'bottom', style:'bw', psm:'6', rot:0},
+    {name:'vùng giữa bill', crop:'middle', style:'soft', psm:'11', rot:0},
+    {name:'phần đầu bill/merchant', crop:'top', style:'soft', psm:'6', rot:0}
   ];
   let collected = '';
-  let bestAmount = 0;
-  let bestMerchant = '';
   for(let i=0;i<tries.length;i++){
     const t = tries[i];
     statusEl.innerHTML = `Đang chuẩn bị ${t.name}...`;
-    const imgData = await preprocessImageForOCR(file, t.crop, t.style);
+    const imgData = await preprocessImageForOCR(file, t.crop, t.style, t.rot || 0);
     statusEl.innerHTML = `Đang OCR ${t.name}... 0%`;
     const result = await Tesseract.recognize(imgData, 'vie+eng', {
       preserve_interword_spaces: '1',
       tessedit_pageseg_mode: t.psm,
-      tessedit_char_whitelist: '',
       logger: m => {
         if(m.status && typeof m.progress === 'number'){
           statusEl.innerHTML = `Đang OCR ${t.name}: ${m.status} · ${Math.round(m.progress*100)}%`;
@@ -2687,10 +2900,10 @@ async function recognizeSmartOCR(file, statusEl, label='ảnh'){
     });
     const piece = result?.data?.text || '';
     collected += `\n--- OCR ${t.name} ---\n${piece}`;
-    bestAmount = parseMoneyText(collected);
-    bestMerchant = parseMerchantText(collected);
+    const amount = parseMoneyText(collected);
+    const merchant = parseMerchantText(collected);
     const hints = inferOcrReceiptHints(collected);
-    if(bestAmount && (bestMerchant || hints.merchant) && i >= 2) break;
+    if(amount && (merchant || hints.merchant) && i >= 3) break;
   }
   return collected.trim();
 }
@@ -2701,9 +2914,6 @@ function applyOcrHintsToExpense(text){
   if(hints.category){
     const current = $('expenseCategory').value;
     if(!current || ['online','other'].includes(current)) $('expenseCategory').value = hints.category;
-  }
-  if(hints.channel && $('channel') && ['online','pos','contactless','wallet','qr'].includes(hints.channel)){
-    // Không ép kênh màn tính thẻ ở đây; chỉ giữ hint cho lúc đưa qua tính.
   }
 }
 
@@ -2738,10 +2948,10 @@ async function runExpenseOCR(){
     if(amount) setMoneyValue('expenseAmount', amount);
     if((hints.merchant || merchant) && !$('expenseMerchant').value) $('expenseMerchant').value = hints.merchant || merchant;
     applyOcrHintsToExpense(text);
-    status.innerHTML = `OCR xong. ${ocrConfidenceMessage(amount, hints.merchant || merchant, hints.category)}. App đã thử nhiều vùng ảnh để tìm đúng tổng tiền. Má kiểm tra lại trước khi lưu.`;
+    status.innerHTML = `OCR xong. ${ocrConfidenceMessage(amount, hints.merchant || merchant, hints.category)}. Bill giấy bị cong/nghiêng vẫn nên kiểm tra lại số cuối cùng trước khi lưu.`;
   }catch(err){
     console.error(err);
-    status.innerHTML = 'OCR lỗi. Ảnh có thể mờ, bị nghiêng hoặc thư viện chưa tải được. Má nhập tay hoặc thử crop sát phần tổng tiền hơn.';
+    status.innerHTML = 'OCR lỗi. Với bill giấy cong/nghiêng, thử chụp sát hơn, vuông góc, không che phần tổng tiền hoặc crop riêng nửa dưới bill.';
   }
 }
 
@@ -2853,10 +3063,10 @@ async function runLoanOCR(){
     if(amount) setMoneyValue('loanAmount', amount);
     if((hints.merchant || merchant) && !$('loanMerchant').value) $('loanMerchant').value = hints.merchant || merchant;
     applyOcrHintsToLoan(text);
-    status.innerHTML = `OCR xong. ${ocrConfidenceMessage(amount, hints.merchant || merchant, hints.category)}. App đã thử nhiều vùng ảnh để tìm đúng tổng tiền. Má kiểm tra lại trước khi lưu.`;
+    status.innerHTML = `OCR xong. ${ocrConfidenceMessage(amount, hints.merchant || merchant, hints.category)}. Bill giấy bị cong/nghiêng vẫn nên kiểm tra lại số cuối cùng trước khi lưu.`;
   }catch(err){
     console.error(err);
-    status.innerHTML = 'OCR lỗi. Ảnh có thể mờ, bị nghiêng hoặc thư viện chưa tải được. Má nhập tay hoặc thử crop sát phần tổng tiền hơn.';
+    status.innerHTML = 'OCR lỗi. Với bill giấy cong/nghiêng, thử chụp sát hơn, vuông góc, không che phần tổng tiền hoặc crop riêng nửa dưới bill.';
   }
 }
 
